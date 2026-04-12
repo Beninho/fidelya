@@ -16,7 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
@@ -106,6 +106,9 @@ fun CameraPreview(onBarcode: (Barcode) -> Unit) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val executor = remember { Executors.newSingleThreadExecutor() }
+    DisposableEffect(Unit) {
+        onDispose { executor.shutdown() }
+    }
     val options = remember {
         BarcodeScannerOptions.Builder()
             .setBarcodeFormats(
@@ -115,6 +118,9 @@ fun CameraPreview(onBarcode: (Barcode) -> Unit) {
             ).build()
     }
     val scanner = remember { BarcodeScanning.getClient(options) }
+    DisposableEffect(Unit) {
+        onDispose { scanner.close() }
+    }
 
     AndroidView(
         factory = { ctx ->

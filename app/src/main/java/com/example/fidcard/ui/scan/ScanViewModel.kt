@@ -17,18 +17,18 @@ sealed class ScanState {
 class ScanViewModel : ViewModel() {
     private val _state = MutableStateFlow<ScanState>(ScanState.Scanning)
     val state: StateFlow<ScanState> = _state
-    private var detected = false
+    private val detected = java.util.concurrent.atomic.AtomicBoolean(false)
 
     init {
         viewModelScope.launch {
             delay(10_000)
-            if (!detected) _state.value = ScanState.Timeout
+            if (!detected.get()) _state.value = ScanState.Timeout
         }
     }
 
     fun onBarcodeDetected(barcode: Barcode) {
-        if (detected) return
-        val value = barcode.rawValue ?: return
+        if (!detected.compareAndSet(false, true)) return
+        val value = barcode.rawValue ?: run { detected.set(false); return }
         val format = when (barcode.format) {
             Barcode.FORMAT_QR_CODE -> "QR_CODE"
             Barcode.FORMAT_EAN_13 -> "EAN_13"
@@ -39,11 +39,10 @@ class ScanViewModel : ViewModel() {
             Barcode.FORMAT_DATA_MATRIX -> "DATA_MATRIX"
             else -> "QR_CODE"
         }
-        detected = true
         _state.value = ScanState.Detected(value, format)
     }
 
     fun resetTimeout() {
-        if (!detected) _state.value = ScanState.Scanning
+        if (!detected.get()) _state.value = ScanState.Scanning
     }
 }
