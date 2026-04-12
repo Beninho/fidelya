@@ -39,7 +39,12 @@ fun CardEditScreen(
 ) {
     val state by vm.uiState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(state.isSaved) { if (state.isSaved) onSaved() }
+    LaunchedEffect(state.isSaved) {
+        if (state.isSaved) {
+            vm.onSavedConsumed()
+            onSaved()
+        }
+    }
 
     Scaffold(
         topBar = {

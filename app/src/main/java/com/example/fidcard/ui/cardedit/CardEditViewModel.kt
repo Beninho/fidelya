@@ -55,16 +55,13 @@ class CardEditViewModel(
 
     fun save() {
         val s = _uiState.value
-        var hasError = false
-        if (s.storeName.isBlank()) {
-            _uiState.update { it.copy(storeNameError = "Le nom est obligatoire") }
-            hasError = true
+        val storeNameError = if (s.storeName.isBlank()) "Le nom est obligatoire" else null
+        val cardNumberError = if (s.cardNumber.isBlank()) "Le numéro est obligatoire" else null
+
+        if (storeNameError != null || cardNumberError != null) {
+            _uiState.update { it.copy(storeNameError = storeNameError, cardNumberError = cardNumberError) }
+            return
         }
-        if (s.cardNumber.isBlank()) {
-            _uiState.update { it.copy(cardNumberError = "Le numéro est obligatoire") }
-            hasError = true
-        }
-        if (hasError) return
 
         viewModelScope.launch {
             repository.save(
@@ -79,6 +76,10 @@ class CardEditViewModel(
             )
             _uiState.update { it.copy(isSaved = true) }
         }
+    }
+
+    fun onSavedConsumed() {
+        _uiState.update { it.copy(isSaved = false) }
     }
 }
 

@@ -5,6 +5,7 @@ import com.example.fidcard.data.repository.CardRepository
 import com.example.fidcard.domain.model.LoyaltyCard
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -75,6 +76,7 @@ class CardEditViewModelTest {
         whenever(repository.getById(5L)).thenReturn(card)
 
         val vm = CardEditViewModel(repository, cardId = 5L)
+        advanceUntilIdle()  // wait for init coroutine to complete
 
         vm.uiState.test {
             val state = awaitItem()
