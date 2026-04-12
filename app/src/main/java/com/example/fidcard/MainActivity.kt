@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -22,7 +23,8 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun FidCardNavHost() {
     val navController = rememberNavController()
-    val app = navController.context.applicationContext as FidCardApp
+    val context = LocalContext.current
+    val app = context.applicationContext as FidCardApp
 
     NavHost(navController = navController, startDestination = "cardList") {
         composable("cardList") {
@@ -39,8 +41,8 @@ fun FidCardNavHost() {
             "cardEdit/{id}?cardNumber={cardNumber}&format={format}",
             arguments = listOf(
                 navArgument("id") { type = NavType.LongType },
-                navArgument("cardNumber") { defaultValue = ""; nullable = true },
-                navArgument("format") { defaultValue = "QR_CODE"; nullable = true }
+                navArgument("cardNumber") { type = NavType.StringType; defaultValue = ""; nullable = true },
+                navArgument("format")     { type = NavType.StringType; defaultValue = "QR_CODE"; nullable = true }
             )
         ) {
             Text("Card Edit")
