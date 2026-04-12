@@ -8,6 +8,9 @@ interface LoyaltyCardDao {
     @Query("SELECT * FROM loyalty_cards ORDER BY storeName ASC")
     fun observeAll(): Flow<List<LoyaltyCardEntity>>
 
+    @Query("SELECT * FROM loyalty_cards ORDER BY storeName ASC")
+    suspend fun getAll(): List<LoyaltyCardEntity>
+
     @Query("SELECT * FROM loyalty_cards WHERE id = :id")
     suspend fun getById(id: Long): LoyaltyCardEntity?
 

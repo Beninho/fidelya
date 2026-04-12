@@ -5,7 +5,6 @@ import com.example.fidcard.data.db.toDomain
 import com.example.fidcard.data.db.toEntity
 import com.example.fidcard.domain.model.LoyaltyCard
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 class CardRepositoryImpl(private val dao: LoyaltyCardDao) : CardRepository {
@@ -15,7 +14,18 @@ class CardRepositoryImpl(private val dao: LoyaltyCardDao) : CardRepository {
     override suspend fun getById(id: Long): LoyaltyCard? = dao.getById(id)?.toDomain()
 
     override suspend fun save(card: LoyaltyCard): Long {
-        val entity = card.toEntity().copy(updatedAt = System.currentTimeMillis())
+        val now = System.currentTimeMillis()
+        val entity = if (card.id > 0) {
+            // Update: preserve original createdAt from DB
+            val existing = dao.getById(card.id)
+            card.toEntity().copy(
+                createdAt = existing?.createdAt ?: now,
+                updatedAt = now
+            )
+        } else {
+            // Insert: set both timestamps
+            card.toEntity().copy(createdAt = now, updatedAt = now)
+        }
         return dao.insert(entity)
     }
 
@@ -24,5 +34,5 @@ class CardRepositoryImpl(private val dao: LoyaltyCardDao) : CardRepository {
     override suspend fun insertAll(cards: List<LoyaltyCard>) =
         dao.insertAll(cards.map { it.toEntity() })
 
-    override suspend fun getAll(): List<LoyaltyCard> = observeAll().first()
+    override suspend fun getAll(): List<LoyaltyCard> = dao.getAll().map { it.toDomain() }
 }

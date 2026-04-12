@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
@@ -63,7 +64,7 @@ class CardRepositoryImplTest {
         val id = repository.save(card)
 
         val savedCard = repository.getById(id)
-        assertNull("Card should not be null before delete", null.takeIf { savedCard != null })
+        assertNotNull("Card should not be null before delete", savedCard)
         assertEquals("Nike", savedCard!!.storeName)
 
         repository.delete(savedCard)
