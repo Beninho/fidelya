@@ -12,6 +12,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.fidcard.ui.cardlist.CardListScreen
+import com.example.fidcard.ui.scan.ScanScreen
 import com.example.fidcard.ui.theme.FidCardTheme
 
 class MainActivity : ComponentActivity() {
@@ -52,7 +53,14 @@ fun FidCardNavHost() {
             Text("Card Edit")
         }
         composable("scan") {
-            Text("Scan")
+            ScanScreen(
+                onBarcodeDetected = { number, format ->
+                    navController.navigate("cardEdit/-1?cardNumber=$number&format=$format") {
+                        popUpTo("scan") { inclusive = true }
+                    }
+                },
+                onBack = { navController.popBackStack() }
+            )
         }
     }
 }
