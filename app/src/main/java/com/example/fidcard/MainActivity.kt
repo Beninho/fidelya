@@ -11,6 +11,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.fidcard.ui.cardlist.CardListScreen
 import com.example.fidcard.ui.theme.FidCardTheme
 
 class MainActivity : ComponentActivity() {
@@ -28,8 +29,11 @@ fun FidCardNavHost() {
 
     NavHost(navController = navController, startDestination = "cardList") {
         composable("cardList") {
-            // TODO: CardListScreen — placeholder
-            Text("Card List")
+            CardListScreen(
+                repository = app.repository,
+                onCardClick = { id -> navController.navigate("cardDetail/$id") },
+                onAddClick = { navController.navigate("scan") }
+            )
         }
         composable(
             "cardDetail/{id}",
