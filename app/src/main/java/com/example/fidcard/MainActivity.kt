@@ -12,6 +12,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.fidcard.ui.cardedit.CardEditScreen
+import com.example.fidcard.ui.carddetail.CardDetailScreen
 import com.example.fidcard.ui.cardlist.CardListScreen
 import com.example.fidcard.ui.scan.ScanScreen
 import com.example.fidcard.ui.theme.FidCardTheme
@@ -41,8 +42,12 @@ fun FidCardNavHost() {
             "cardDetail/{id}",
             arguments = listOf(navArgument("id") { type = NavType.LongType })
         ) { back ->
-            // placeholder for now — CardDetailScreen comes in Task 7
-            Text("Card Detail — id=${back.arguments?.getLong("id")}")
+            CardDetailScreen(
+                cardId = back.arguments!!.getLong("id"),
+                repository = app.repository,
+                onEditClick = { id -> navController.navigate("cardEdit/$id") },
+                onBack = { navController.popBackStack() }
+            )
         }
         composable(
             "cardEdit/{id}?cardNumber={cardNumber}&format={format}",
