@@ -1,0 +1,33 @@
+# Worktrees
+.worktrees/
+
+# Android
+*.iml
+.gradle/
+local.properties
+.idea/
+.DS_Store
+build/
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+bin/
+gen/
+out/
+release/
+
+# Gradle wrapper
+!gradle/wrapper/gradle-wrapper.jar
+
+# Secrets
+*.jks
+*.keystore
+*.properties
+
+# GrepAI
+.grepai/
