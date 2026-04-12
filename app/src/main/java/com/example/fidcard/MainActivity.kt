@@ -11,6 +11,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.fidcard.ui.cardedit.CardEditScreen
 import com.example.fidcard.ui.cardlist.CardListScreen
 import com.example.fidcard.ui.scan.ScanScreen
 import com.example.fidcard.ui.theme.FidCardTheme
@@ -39,18 +40,26 @@ fun FidCardNavHost() {
         composable(
             "cardDetail/{id}",
             arguments = listOf(navArgument("id") { type = NavType.LongType })
-        ) {
-            Text("Card Detail")
+        ) { back ->
+            // placeholder for now — CardDetailScreen comes in Task 7
+            Text("Card Detail — id=${back.arguments?.getLong("id")}")
         }
         composable(
             "cardEdit/{id}?cardNumber={cardNumber}&format={format}",
             arguments = listOf(
                 navArgument("id") { type = NavType.LongType },
                 navArgument("cardNumber") { type = NavType.StringType; defaultValue = ""; nullable = true },
-                navArgument("format")     { type = NavType.StringType; defaultValue = "QR_CODE"; nullable = true }
+                navArgument("format") { type = NavType.StringType; defaultValue = "QR_CODE"; nullable = true }
             )
-        ) {
-            Text("Card Edit")
+        ) { back ->
+            CardEditScreen(
+                cardId = back.arguments!!.getLong("id"),
+                prefilledCardNumber = back.arguments?.getString("cardNumber")?.ifBlank { null },
+                prefilledFormat = back.arguments?.getString("format"),
+                repository = app.repository,
+                onSaved = { navController.popBackStack("cardList", false) },
+                onBack = { navController.popBackStack() }
+            )
         }
         composable("scan") {
             ScanScreen(
