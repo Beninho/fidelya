@@ -2,9 +2,11 @@ package com.example.fidcard.ui.cardlist
 
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
+import com.example.fidcard.data.repository.CardRepository
 import com.example.fidcard.domain.model.LoyaltyCard
 import com.example.fidcard.ui.theme.FidCardTheme
 import kotlinx.coroutines.flow.flowOf
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.kotlin.mock
@@ -12,7 +14,9 @@ import org.mockito.kotlin.whenever
 
 class CardListScreenTest {
     @get:Rule val rule = createComposeRule()
-    private val repo = mock<com.example.fidcard.data.repository.CardRepository>()
+    private lateinit var repo: CardRepository
+
+    @Before fun setUp() { repo = mock() }
 
     @Test fun `empty state shows placeholder text`() {
         whenever(repo.observeAll()).thenReturn(flowOf(emptyList()))
