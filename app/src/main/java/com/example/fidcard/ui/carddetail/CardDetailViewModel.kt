@@ -25,10 +25,13 @@ class CardDetailViewModel(
 
     fun deleteCard() {
         viewModelScope.launch {
-            _uiState.value.card?.let { repository.delete(it) }
+            val card = _uiState.value.card ?: return@launch
+            repository.delete(card)
             _uiState.update { it.copy(isDeleted = true) }
         }
     }
+
+    fun onDeletedConsumed() = _uiState.update { it.copy(isDeleted = false) }
 }
 
 fun cardDetailViewModelFactory(repository: CardRepository, cardId: Long) =

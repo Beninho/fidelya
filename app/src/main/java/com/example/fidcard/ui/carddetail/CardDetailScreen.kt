@@ -67,23 +67,33 @@ fun CardDetailScreen(
     val view = LocalView.current
     val context = LocalContext.current
 
-    LaunchedEffect(state.isDeleted) { if (state.isDeleted) onBack() }
+    LaunchedEffect(state.isDeleted) {
+        if (state.isDeleted) {
+            vm.onDeletedConsumed()
+            onBack()
+        }
+    }
 
-    LaunchedEffect(checkoutMode) {
-        val window = (context as? android.app.Activity)?.window ?: return@LaunchedEffect
-        val controller = WindowInsetsControllerCompat(window, view)
-        if (checkoutMode) {
+    DisposableEffect(checkoutMode) {
+        val window = (context as? android.app.Activity)?.window
+        val controller = window?.let { WindowInsetsControllerCompat(it, view) }
+
+        if (checkoutMode && window != null && controller != null) {
             controller.hide(WindowInsetsCompat.Type.systemBars())
             controller.systemBarsBehavior =
                 WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             val lp = window.attributes
             lp.screenBrightness = 1f
             window.attributes = lp
-        } else {
-            controller.show(WindowInsetsCompat.Type.systemBars())
-            val lp = window.attributes
-            lp.screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
-            window.attributes = lp
+        }
+
+        onDispose {
+            if (checkoutMode && window != null && controller != null) {
+                controller.show(WindowInsetsCompat.Type.systemBars())
+                val lp = window.attributes
+                lp.screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
+                window.attributes = lp
+            }
         }
     }
 
@@ -171,11 +181,20 @@ fun CardDetailScreen(
                     Text("Présenter en caisse")
                 }
             }
-        } ?: Box(
-            Modifier.fillMaxSize().padding(padding),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator()
+        } ?: if (state.isLoading) {
+            Box(
+                Modifier.fillMaxSize().padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        } else {
+            Box(
+                Modifier.fillMaxSize().padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("Carte introuvable", style = MaterialTheme.typography.bodyLarge)
+            }
         }
     }
 }
