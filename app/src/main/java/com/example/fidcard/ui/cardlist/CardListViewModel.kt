@@ -1,8 +1,11 @@
 package com.example.fidcard.ui.cardlist
 
+import android.content.ContentResolver
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.example.fidcard.backup.BackupManager
 import com.example.fidcard.data.repository.CardRepository
 import com.example.fidcard.domain.model.LoyaltyCard
 import kotlinx.coroutines.flow.*
@@ -21,7 +24,12 @@ class CardListViewModel(private val repository: CardRepository) : ViewModel() {
         viewModelScope.launch { repository.insertAll(cards) }
     }
 
-    suspend fun getAllCards(): List<LoyaltyCard> = repository.getAll()
+    fun exportCards(uri: Uri, contentResolver: ContentResolver) {
+        viewModelScope.launch {
+            val json = BackupManager.export(repository.getAll())
+            contentResolver.openOutputStream(uri)?.bufferedWriter()?.use { it.write(json) }
+        }
+    }
 }
 
 fun cardListViewModelFactory(repository: CardRepository) =

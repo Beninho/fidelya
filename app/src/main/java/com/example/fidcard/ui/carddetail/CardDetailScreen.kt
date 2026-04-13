@@ -75,10 +75,11 @@ fun CardDetailScreen(
     }
 
     DisposableEffect(checkoutMode) {
+        val wasCheckout = checkoutMode  // capture at setup time so onDispose sees the right value
         val window = (context as? android.app.Activity)?.window
         val controller = window?.let { WindowInsetsControllerCompat(it, view) }
 
-        if (checkoutMode && window != null && controller != null) {
+        if (wasCheckout && window != null && controller != null) {
             controller.hide(WindowInsetsCompat.Type.systemBars())
             controller.systemBarsBehavior =
                 WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
@@ -88,7 +89,7 @@ fun CardDetailScreen(
         }
 
         onDispose {
-            if (checkoutMode && window != null && controller != null) {
+            if (wasCheckout && window != null && controller != null) {
                 controller.show(WindowInsetsCompat.Type.systemBars())
                 val lp = window.attributes
                 lp.screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE

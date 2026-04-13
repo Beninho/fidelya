@@ -28,6 +28,7 @@ import com.example.fidcard.data.repository.CardRepository
 import com.example.fidcard.domain.model.LoyaltyCard
 import kotlinx.coroutines.launch
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CardListScreen(
@@ -44,11 +45,7 @@ fun CardListScreen(
         ActivityResultContracts.CreateDocument("application/json")
     ) { uri ->
         uri ?: return@rememberLauncherForActivityResult
-        scope.launch {
-            val jsonStr = BackupManager.export(vm.getAllCards())
-            context.contentResolver.openOutputStream(uri)
-                ?.bufferedWriter()?.use { it.write(jsonStr) }
-        }
+        vm.exportCards(uri, context.contentResolver)
     }
 
     val importLauncher = rememberLauncherForActivityResult(

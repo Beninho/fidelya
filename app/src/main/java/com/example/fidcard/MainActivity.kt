@@ -1,5 +1,6 @@
 package com.example.fidcard
 
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -69,7 +70,8 @@ fun FidCardNavHost() {
         composable("scan") {
             ScanScreen(
                 onBarcodeDetected = { number, format ->
-                    navController.navigate("cardEdit/-1?cardNumber=$number&format=$format") {
+                    val encoded = Uri.encode(number)
+                    navController.navigate("cardEdit/-1?cardNumber=$encoded&format=$format") {
                         popUpTo("scan") { inclusive = true }
                     }
                 },

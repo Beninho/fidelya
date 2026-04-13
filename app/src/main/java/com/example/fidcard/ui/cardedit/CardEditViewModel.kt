@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicBoolean
 
 class CardEditViewModel(
     private val repository: CardRepository,
@@ -16,6 +17,7 @@ class CardEditViewModel(
     prefilledCardNumber: String? = null,
     prefilledFormat: String? = null
 ) : ViewModel() {
+    private val isSaving = AtomicBoolean(false)
     private val _uiState = MutableStateFlow(
         CardEditUiState(
             cardNumber = prefilledCardNumber ?: "",
@@ -63,18 +65,24 @@ class CardEditViewModel(
             return
         }
 
+        if (!isSaving.compareAndSet(false, true)) return
+
         viewModelScope.launch {
-            repository.save(
-                LoyaltyCard(
-                    id = if (cardId > 0) cardId else 0,
-                    storeName = s.storeName.trim(),
-                    cardNumber = s.cardNumber.trim(),
-                    barcodeFormat = s.barcodeFormat,
-                    backgroundColor = s.backgroundColor,
-                    logoEmoji = s.logoEmoji.ifBlank { null }
+            try {
+                repository.save(
+                    LoyaltyCard(
+                        id = if (cardId > 0) cardId else 0,
+                        storeName = s.storeName.trim(),
+                        cardNumber = s.cardNumber.trim(),
+                        barcodeFormat = s.barcodeFormat,
+                        backgroundColor = s.backgroundColor,
+                        logoEmoji = s.logoEmoji.ifBlank { null }
+                    )
                 )
-            )
-            _uiState.update { it.copy(isSaved = true) }
+                _uiState.update { it.copy(isSaved = true) }
+            } finally {
+                isSaving.set(false)
+            }
         }
     }
 
