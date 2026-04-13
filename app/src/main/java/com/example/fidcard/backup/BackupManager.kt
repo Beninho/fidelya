@@ -44,7 +44,7 @@ object BackupManager {
 
     fun import(context: Context, uri: Uri): List<LoyaltyCard> {
         val content = context.contentResolver.openInputStream(uri)
-            ?.bufferedReader()?.readText()
+            ?.use { it.bufferedReader().readText() }
             ?: error("Impossible de lire le fichier")
         return json.decodeFromString<List<BackupCard>>(content).map { it.toDomain() }
     }
