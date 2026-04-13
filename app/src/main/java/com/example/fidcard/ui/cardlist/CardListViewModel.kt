@@ -20,6 +20,8 @@ class CardListViewModel(private val repository: CardRepository) : ViewModel() {
     fun importCards(cards: List<LoyaltyCard>) {
         viewModelScope.launch { repository.insertAll(cards) }
     }
+
+    suspend fun getAllCards(): List<LoyaltyCard> = repository.getAll()
 }
 
 fun cardListViewModelFactory(repository: CardRepository) =
