@@ -20,7 +20,16 @@ class CardListScreenTest {
 
     @Test fun `empty state shows placeholder text`() {
         whenever(repo.observeAll()).thenReturn(flowOf(emptyList()))
-        rule.setContent { FidCardTheme { CardListScreen(repository = repo, onCardClick = {}, onAddClick = {}) } }
+        rule.setContent {
+            FidCardTheme {
+                CardListScreen(
+                    repository = repo,
+                    onCardClick = {},
+                    onAddClick = {},
+                    onManualEntry = {}
+                )
+            }
+        }
         rule.onNodeWithText("Aucune carte. Appuyez sur + pour scanner.").assertIsDisplayed()
     }
 
@@ -30,8 +39,70 @@ class CardListScreenTest {
             LoyaltyCard(id = 2, storeName = "Fnac", cardNumber = "5678", barcodeFormat = "QR_CODE", backgroundColor = "#1565C0")
         )
         whenever(repo.observeAll()).thenReturn(flowOf(cards))
-        rule.setContent { FidCardTheme { CardListScreen(repository = repo, onCardClick = {}, onAddClick = {}) } }
+        rule.setContent {
+            FidCardTheme {
+                CardListScreen(
+                    repository = repo,
+                    onCardClick = {},
+                    onAddClick = {},
+                    onManualEntry = {}
+                )
+            }
+        }
         rule.onNodeWithText("Carrefour").assertIsDisplayed()
         rule.onNodeWithText("Fnac").assertIsDisplayed()
+    }
+
+    @Test fun `fab click shows bottom sheet with two options`() {
+        whenever(repo.observeAll()).thenReturn(flowOf(emptyList()))
+        rule.setContent {
+            FidCardTheme {
+                CardListScreen(
+                    repository = repo,
+                    onCardClick = {},
+                    onAddClick = {},
+                    onManualEntry = {}
+                )
+            }
+        }
+        rule.onNodeWithContentDescription("Ajouter").performClick()
+        rule.onNodeWithText("Scanner un code-barres").assertIsDisplayed()
+        rule.onNodeWithText("Saisir manuellement").assertIsDisplayed()
+    }
+
+    @Test fun `scanner option triggers onAddClick`() {
+        whenever(repo.observeAll()).thenReturn(flowOf(emptyList()))
+        var addClicked = false
+        rule.setContent {
+            FidCardTheme {
+                CardListScreen(
+                    repository = repo,
+                    onCardClick = {},
+                    onAddClick = { addClicked = true },
+                    onManualEntry = {}
+                )
+            }
+        }
+        rule.onNodeWithContentDescription("Ajouter").performClick()
+        rule.onNodeWithText("Scanner un code-barres").performClick()
+        assert(addClicked)
+    }
+
+    @Test fun `manual entry option triggers onManualEntry`() {
+        whenever(repo.observeAll()).thenReturn(flowOf(emptyList()))
+        var manualClicked = false
+        rule.setContent {
+            FidCardTheme {
+                CardListScreen(
+                    repository = repo,
+                    onCardClick = {},
+                    onAddClick = {},
+                    onManualEntry = { manualClicked = true }
+                )
+            }
+        }
+        rule.onNodeWithContentDescription("Ajouter").performClick()
+        rule.onNodeWithText("Saisir manuellement").performClick()
+        assert(manualClicked)
     }
 }
