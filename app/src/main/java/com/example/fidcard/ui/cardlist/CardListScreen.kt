@@ -30,6 +30,8 @@ import com.example.fidcard.data.order.CardOrderStore
 import com.example.fidcard.data.repository.CardRepository
 import com.example.fidcard.domain.model.LoyaltyCard
 import kotlinx.coroutines.launch
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyGridState
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -139,19 +141,29 @@ fun CardListScreen(
                 )
             }
         } else {
+            val gridState = rememberLazyGridState()
+            val reorderState = rememberReorderableLazyGridState(
+                lazyGridState = gridState,
+                onMove = { from, to -> vm.onMove(from.index, to.index) }
+            )
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
+                state = gridState,
                 contentPadding = PaddingValues(16.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.padding(padding)
             ) {
                 items(state.cards, key = { it.id }) { card ->
-                    LoyaltyCardItem(
-                        card = card,
-                        onClick = { onCardClick(card.id) },
-                        onDelete = { vm.deleteCard(card) }
-                    )
+                    ReorderableItem(reorderState, key = card.id) { isDragging ->
+                        LoyaltyCardItem(
+                            card = card,
+                            isDragging = isDragging,
+                            onClick = { onCardClick(card.id) },
+                            onDelete = { vm.deleteCard(card) },
+                            modifier = Modifier.longPressDraggableHandle()
+                        )
+                    }
                 }
             }
         }
@@ -159,16 +171,25 @@ fun CardListScreen(
 }
 
 @Composable
-fun LoyaltyCardItem(card: LoyaltyCard, onClick: () -> Unit, onDelete: () -> Unit) {
+fun LoyaltyCardItem(
+    card: LoyaltyCard,
+    isDragging: Boolean = false,
+    onClick: () -> Unit,
+    onDelete: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     val bgColor = runCatching {
         Color(android.graphics.Color.parseColor(card.backgroundColor))
     }.getOrDefault(Color.Gray)
 
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .aspectRatio(1.6f)
             .clickable(onClick = onClick),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (isDragging) 8.dp else 0.dp
+        ),
         colors = CardDefaults.cardColors(containerColor = bgColor)
     ) {
         Box(Modifier.fillMaxSize().padding(12.dp)) {
