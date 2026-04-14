@@ -1,10 +1,14 @@
 package com.example.fidcard.ui.scan
 
 import android.Manifest
+import android.app.Activity
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.Settings
 import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
@@ -19,29 +23,49 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.isGranted
-import com.google.accompanist.permissions.rememberPermissionState
-import com.google.accompanist.permissions.shouldShowRationale
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import java.util.concurrent.Executors
 
-@OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
+private enum class CameraPermission { GRANTED, SHOW_RATIONALE, DENIED }
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScanScreen(
     onBarcodeDetected: (String, String) -> Unit,
     onBack: () -> Unit,
     vm: ScanViewModel = viewModel()
 ) {
-    val cameraPermission = rememberPermissionState(Manifest.permission.CAMERA)
     val state by vm.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val activity = context as Activity
+    var permissionState by remember {
+        mutableStateOf(
+            when {
+                ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
+                    == PackageManager.PERMISSION_GRANTED -> CameraPermission.GRANTED
+                ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.CAMERA)
+                    -> CameraPermission.SHOW_RATIONALE
+                else -> CameraPermission.DENIED
+            }
+        )
+    }
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        permissionState = when {
+            granted -> CameraPermission.GRANTED
+            ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.CAMERA)
+                -> CameraPermission.SHOW_RATIONALE
+            else -> CameraPermission.DENIED
+        }
+    }
 
     LaunchedEffect(state) {
         if (state is ScanState.Detected) {
@@ -63,13 +87,13 @@ fun ScanScreen(
         }
     ) { padding ->
         Box(Modifier.fillMaxSize().padding(padding)) {
-            when {
-                cameraPermission.status.isGranted ->
+            when (permissionState) {
+                CameraPermission.GRANTED ->
                     CameraPreview(onBarcode = vm::onBarcodeDetected)
-                cameraPermission.status.shouldShowRationale ->
-                    PermissionRationale(onRequest = { cameraPermission.launchPermissionRequest() })
-                else -> {
-                    LaunchedEffect(Unit) { cameraPermission.launchPermissionRequest() }
+                CameraPermission.SHOW_RATIONALE ->
+                    PermissionRationale(onRequest = { permissionLauncher.launch(Manifest.permission.CAMERA) })
+                CameraPermission.DENIED -> {
+                    LaunchedEffect(Unit) { permissionLauncher.launch(Manifest.permission.CAMERA) }
                     PermissionDenied(onSettings = {
                         context.startActivity(
                             Intent(

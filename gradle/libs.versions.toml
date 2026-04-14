@@ -11,9 +11,7 @@ room = "2.6.1"
 cameraX = "1.4.1"
 mlkitBarcode = "17.3.0"
 zxing = "3.5.3"
-coil = "2.7.0"
 kotlinxSerialization = "1.7.3"
-accompanistPermissions = "0.37.0"
 junit = "4.13.2"
 turbine = "1.2.0"
 coroutinesTest = "1.9.0"
@@ -49,12 +47,8 @@ androidx-camera-view = { group = "androidx.camera", name = "camera-view", versio
 mlkit-barcode-scanning = { group = "com.google.mlkit", name = "barcode-scanning", version.ref = "mlkitBarcode" }
 # ZXing
 zxing-core = { group = "com.google.zxing", name = "core", version.ref = "zxing" }
-# Coil
-coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
 # Serialization
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
-# Accompanist
-accompanist-permissions = { group = "com.google.accompanist", name = "accompanist-permissions", version.ref = "accompanistPermissions" }
 # Tests
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutinesTest" }

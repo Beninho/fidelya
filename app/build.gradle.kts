@@ -21,7 +21,8 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -80,14 +81,8 @@ dependencies {
     // ZXing
     implementation(libs.zxing.core)
 
-    // Coil
-    implementation(libs.coil.compose)
-
     // Serialization
     implementation(libs.kotlinx.serialization.json)
-
-    // Accompanist
-    implementation(libs.accompanist.permissions)
 
     // Tests
     testImplementation(libs.junit)
