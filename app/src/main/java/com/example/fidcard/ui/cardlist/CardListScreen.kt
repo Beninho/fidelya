@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.fidcard.backup.BackupManager
+import com.example.fidcard.data.order.CardOrderStore
 import com.example.fidcard.data.repository.CardRepository
 import com.example.fidcard.domain.model.LoyaltyCard
 import kotlinx.coroutines.launch
@@ -35,10 +36,11 @@ import kotlinx.coroutines.launch
 @Composable
 fun CardListScreen(
     repository: CardRepository,
+    cardOrderStore: CardOrderStore,
     onCardClick: (Long) -> Unit,
     onAddClick: () -> Unit,
     onManualEntry: () -> Unit,
-    vm: CardListViewModel = viewModel(factory = cardListViewModelFactory(repository))
+    vm: CardListViewModel = viewModel(factory = cardListViewModelFactory(repository, cardOrderStore))
 ) {
     val state by vm.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current

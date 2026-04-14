@@ -1,6 +1,7 @@
 package com.example.fidcard.ui.cardlist
 
 import app.cash.turbine.test
+import com.example.fidcard.data.order.CardOrderStore
 import com.example.fidcard.data.repository.CardRepository
 import com.example.fidcard.domain.model.LoyaltyCard
 import kotlinx.coroutines.Dispatchers
@@ -23,20 +24,23 @@ class CardListViewModelTest {
 
     private val testDispatcher = UnconfinedTestDispatcher()
     private lateinit var repository: CardRepository
+    private lateinit var orderStore: CardOrderStore
     private lateinit var vm: CardListViewModel
 
-    private val sampleCard = LoyaltyCard(
-        id = 1L,
-        storeName = "Carrefour",
-        cardNumber = "1234567890",
-        barcodeFormat = "QR_CODE",
-        backgroundColor = "#FF0000"
+    private val cardA = LoyaltyCard(
+        id = 1L, storeName = "Carrefour", cardNumber = "1234567890",
+        barcodeFormat = "QR_CODE", backgroundColor = "#FF0000"
+    )
+    private val cardB = LoyaltyCard(
+        id = 2L, storeName = "Leclerc", cardNumber = "0987654321",
+        barcodeFormat = "QR_CODE", backgroundColor = "#0000FF"
     )
 
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         repository = mock()
+        orderStore = mock()
     }
 
     @After
@@ -45,14 +49,51 @@ class CardListViewModelTest {
     }
 
     @Test
-    fun `emits cards from repository`() = runTest {
-        whenever(repository.observeAll()).thenReturn(flowOf(listOf(sampleCard)))
-        vm = CardListViewModel(repository)
+    fun `emits cards in original order when no saved order`() = runTest {
+        whenever(repository.observeAll()).thenReturn(flowOf(listOf(cardA, cardB)))
+        whenever(orderStore.orderFlow).thenReturn(flowOf(emptyList()))
+        vm = CardListViewModel(repository, orderStore)
 
         vm.uiState.test {
-            val state = awaitItem()
-            assertEquals(1, state.cards.size)
-            assertEquals(sampleCard, state.cards[0])
+            assertEquals(listOf(cardA, cardB), awaitItem().cards)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `applies saved order when orderFlow has ids`() = runTest {
+        whenever(repository.observeAll()).thenReturn(flowOf(listOf(cardA, cardB)))
+        whenever(orderStore.orderFlow).thenReturn(flowOf(listOf(2L, 1L)))
+        vm = CardListViewModel(repository, orderStore)
+
+        vm.uiState.test {
+            assertEquals(listOf(cardB, cardA), awaitItem().cards)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `new card not in saved order appears at end`() = runTest {
+        whenever(repository.observeAll()).thenReturn(flowOf(listOf(cardA, cardB)))
+        whenever(orderStore.orderFlow).thenReturn(flowOf(listOf(1L))) // only cardA in saved order
+        vm = CardListViewModel(repository, orderStore)
+
+        vm.uiState.test {
+            assertEquals(listOf(cardA, cardB), awaitItem().cards)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `onMove saves new order to store`() = runTest {
+        whenever(repository.observeAll()).thenReturn(flowOf(listOf(cardA, cardB)))
+        whenever(orderStore.orderFlow).thenReturn(flowOf(emptyList()))
+        vm = CardListViewModel(repository, orderStore)
+
+        vm.uiState.test {
+            awaitItem() // consume initial state: [cardA, cardB]
+            vm.onMove(from = 0, to = 1)
+            verify(orderStore).save(listOf(2L, 1L))
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -60,10 +101,11 @@ class CardListViewModelTest {
     @Test
     fun `delete card calls repository delete`() = runTest {
         whenever(repository.observeAll()).thenReturn(flowOf(emptyList()))
-        vm = CardListViewModel(repository)
+        whenever(orderStore.orderFlow).thenReturn(flowOf(emptyList()))
+        vm = CardListViewModel(repository, orderStore)
 
-        vm.deleteCard(sampleCard)
+        vm.deleteCard(cardA)
 
-        verify(repository).delete(sampleCard)
+        verify(repository).delete(cardA)
     }
 }

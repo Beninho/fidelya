@@ -35,6 +35,7 @@ fun FidCardNavHost() {
         composable("cardList") {
             CardListScreen(
                 repository = app.repository,
+                cardOrderStore = app.cardOrderStore,
                 onCardClick = { id -> navController.navigate("cardDetail/$id") },
                 onAddClick = { navController.navigate("scan") },
                 onManualEntry = { navController.navigate("cardEdit/-1") }

@@ -6,15 +6,30 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.fidcard.backup.BackupManager
+import com.example.fidcard.data.order.CardOrderStore
 import com.example.fidcard.data.repository.CardRepository
 import com.example.fidcard.domain.model.LoyaltyCard
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
-class CardListViewModel(private val repository: CardRepository) : ViewModel() {
-    val uiState: StateFlow<CardListUiState> = repository.observeAll()
-        .map { CardListUiState(it) }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), CardListUiState())
+class CardListViewModel(
+    private val repository: CardRepository,
+    private val cardOrderStore: CardOrderStore
+) : ViewModel() {
+
+    val uiState: StateFlow<CardListUiState> =
+        repository.observeAll()
+            .combine(cardOrderStore.orderFlow) { cards, orderedIds ->
+                CardListUiState(applyOrder(cards, orderedIds))
+            }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), CardListUiState())
+
+    fun onMove(from: Int, to: Int) {
+        val current = uiState.value.cards.toMutableList()
+        if (from !in current.indices || to !in current.indices) return
+        current.add(to, current.removeAt(from))
+        viewModelScope.launch { cardOrderStore.save(current.map { it.id }) }
+    }
 
     fun deleteCard(card: LoyaltyCard) {
         viewModelScope.launch { repository.delete(card) }
@@ -30,12 +45,18 @@ class CardListViewModel(private val repository: CardRepository) : ViewModel() {
             contentResolver.openOutputStream(uri)?.bufferedWriter()?.use { it.write(json) }
         }
     }
+
+    private fun applyOrder(cards: List<LoyaltyCard>, orderedIds: List<Long>): List<LoyaltyCard> {
+        if (orderedIds.isEmpty()) return cards
+        val indexMap = orderedIds.withIndex().associate { (i, id) -> id to i }
+        return cards.sortedBy { indexMap[it.id] ?: orderedIds.size }
+    }
 }
 
-fun cardListViewModelFactory(repository: CardRepository) =
+fun cardListViewModelFactory(repository: CardRepository, cardOrderStore: CardOrderStore) =
     object : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             @Suppress("UNCHECKED_CAST")
-            return CardListViewModel(repository) as T
+            return CardListViewModel(repository, cardOrderStore) as T
         }
     }
