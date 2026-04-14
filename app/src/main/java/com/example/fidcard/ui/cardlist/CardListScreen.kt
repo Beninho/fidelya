@@ -66,10 +66,11 @@ fun CardListScreen(
         }
     }
 
+    val sheetState = rememberModalBottomSheetState()
     if (showAddSheet) {
         ModalBottomSheet(
             onDismissRequest = { showAddSheet = false },
-            sheetState = rememberModalBottomSheetState()
+            sheetState = sheetState
         ) {
             ListItem(
                 headlineContent = { Text("Scanner un code-barres") },
@@ -131,7 +132,7 @@ fun CardListScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    "Aucune carte. Appuyez sur + pour scanner.",
+                    "Aucune carte. Appuyez sur + pour en ajouter une.",
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }

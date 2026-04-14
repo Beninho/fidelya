@@ -31,7 +31,7 @@ class CardListScreenTest {
                 )
             }
         }
-        rule.onNodeWithText("Aucune carte. Appuyez sur + pour scanner.").assertIsDisplayed()
+        rule.onNodeWithText("Aucune carte. Appuyez sur + pour en ajouter une.").assertIsDisplayed()
     }
 
     @Test fun `cards are displayed in grid`() {
