@@ -25,7 +25,7 @@ class CardOrderStoreImpl(context: Context) : CardOrderStore {
 
     override val orderFlow: Flow<List<Long>> = dataStore.data.map { prefs ->
         val raw = prefs[orderKey] ?: return@map emptyList()
-        Json.decodeFromString<List<Long>>(raw)
+        runCatching { Json.decodeFromString<List<Long>>(raw) }.getOrDefault(emptyList())
     }
 
     override suspend fun save(ids: List<Long>) {
