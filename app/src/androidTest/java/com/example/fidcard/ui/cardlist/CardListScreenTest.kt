@@ -10,6 +10,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.kotlin.mock
+import org.junit.Assert.assertTrue
 import org.mockito.kotlin.whenever
 
 class CardListScreenTest {
@@ -85,7 +86,7 @@ class CardListScreenTest {
         }
         rule.onNodeWithContentDescription("Ajouter").performClick()
         rule.onNodeWithText("Scanner un code-barres").performClick()
-        assert(addClicked)
+        assertTrue(addClicked)
     }
 
     @Test fun `manual entry option triggers onManualEntry`() {
@@ -103,6 +104,6 @@ class CardListScreenTest {
         }
         rule.onNodeWithContentDescription("Ajouter").performClick()
         rule.onNodeWithText("Saisir manuellement").performClick()
-        assert(manualClicked)
+        assertTrue(manualClicked)
     }
 }
