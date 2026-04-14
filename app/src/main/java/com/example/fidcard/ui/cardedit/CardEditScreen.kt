@@ -19,12 +19,28 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.fidcard.data.repository.CardRepository
 
 val PALETTE = listOf(
-    "#E53935", "#F57C00", "#F9A825", "#388E3C",
-    "#1565C0", "#5C6BC0", "#7B1FA2", "#00838F", "#4E342E", "#37474F"
+    // Rouges / Roses
+    "#E53935", "#E91E63", "#F06292",
+    // Oranges
+    "#F57C00", "#FF7043",
+    // Jaunes
+    "#F9A825", "#FDD835",
+    // Verts
+    "#388E3C", "#43A047", "#00897B",
+    // Bleus
+    "#1565C0", "#039BE5", "#00838F",
+    // Violets / Indigo
+    "#5C6BC0", "#7B1FA2", "#9C27B0",
+    // Marrons / Gris chauds
+    "#4E342E", "#795548",
+    // Gris / Ardoise
+    "#37474F", "#546E7A",
+    // Noir / Blanc
+    "#212121", "#FAFAFA"
 )
 val FORMATS = listOf("QR_CODE", "EAN_13", "EAN_8", "CODE_128", "CODE_39", "PDF_417", "DATA_MATRIX")
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun CardEditScreen(
     cardId: Long,
@@ -115,7 +131,10 @@ fun CardEditScreen(
                 }
             }
             Text("Couleur de fond", style = MaterialTheme.typography.labelMedium)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 PALETTE.forEach { hex ->
                     val color = runCatching {
                         Color(android.graphics.Color.parseColor(hex))
