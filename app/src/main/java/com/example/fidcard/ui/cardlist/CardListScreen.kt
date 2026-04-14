@@ -130,6 +130,11 @@ fun CardListScreen(
             }
         }
     ) { padding ->
+        val gridState = rememberLazyGridState()
+        val reorderState = rememberReorderableLazyGridState(
+            lazyGridState = gridState,
+            onMove = { from, to -> vm.onMove(from.index, to.index) }
+        )
         if (state.cards.isEmpty()) {
             Box(
                 Modifier.fillMaxSize().padding(padding),
@@ -141,11 +146,6 @@ fun CardListScreen(
                 )
             }
         } else {
-            val gridState = rememberLazyGridState()
-            val reorderState = rememberReorderableLazyGridState(
-                lazyGridState = gridState,
-                onMove = { from, to -> vm.onMove(from.index, to.index) }
-            )
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
                 state = gridState,
