@@ -83,6 +83,10 @@ dependencies {
 
     // Serialization
     implementation(libs.kotlinx.serialization.json)
+    // Drag-and-drop reordering in Compose LazyGrid
+    implementation(libs.reorderable)
+    // Card order persistence
+    implementation(libs.androidx.datastore.preferences)
 
     // Tests
     testImplementation(libs.junit)

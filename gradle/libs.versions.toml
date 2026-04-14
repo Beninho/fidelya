@@ -1,5 +1,5 @@
 [versions]
-agp = "8.7.3"
+agp = "8.13.2"
 kotlin = "2.1.0"
 ksp = "2.1.0-1.0.29"
 coreKtx = "1.15.0"
@@ -8,6 +8,8 @@ activityCompose = "1.9.3"
 navigationCompose = "2.8.5"
 lifecycleRuntimeKtx = "2.8.7"
 room = "2.6.1"
+reorderable = "2.4.3"
+datastore = "1.1.1"
 cameraX = "1.4.1"
 mlkitBarcode = "17.3.0"
 zxing = "3.5.3"
@@ -49,6 +51,8 @@ mlkit-barcode-scanning = { group = "com.google.mlkit", name = "barcode-scanning"
 zxing-core = { group = "com.google.zxing", name = "core", version.ref = "zxing" }
 # Serialization
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
+reorderable = { group = "sh.calvin.reorderable", name = "reorderable", version.ref = "reorderable" }
+androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
 # Tests
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutinesTest" }
