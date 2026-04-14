@@ -25,6 +25,7 @@ class CardListViewModel(
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), CardListUiState())
 
     fun onMove(from: Int, to: Int) {
+        // Reads last-emitted state; rapid successive moves may lose intermediary order until DataStore round-trip completes
         val current = uiState.value.cards.toMutableList()
         if (from !in current.indices || to !in current.indices) return
         current.add(to, current.removeAt(from))
