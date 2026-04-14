@@ -9,7 +9,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -35,11 +37,13 @@ fun CardListScreen(
     repository: CardRepository,
     onCardClick: (Long) -> Unit,
     onAddClick: () -> Unit,
+    onManualEntry: () -> Unit,
     vm: CardListViewModel = viewModel(factory = cardListViewModelFactory(repository))
 ) {
     val state by vm.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    var showAddSheet by remember { mutableStateOf(false) }
 
     val exportLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/json")
@@ -59,6 +63,31 @@ fun CardListScreen(
             }.onFailure {
                 Toast.makeText(context, "Fichier invalide", Toast.LENGTH_SHORT).show()
             }
+        }
+    }
+
+    if (showAddSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showAddSheet = false },
+            sheetState = rememberModalBottomSheetState()
+        ) {
+            ListItem(
+                headlineContent = { Text("Scanner un code-barres") },
+                leadingContent = { Icon(Icons.Default.CameraAlt, contentDescription = null) },
+                modifier = Modifier.clickable {
+                    showAddSheet = false
+                    onAddClick()
+                }
+            )
+            ListItem(
+                headlineContent = { Text("Saisir manuellement") },
+                leadingContent = { Icon(Icons.Default.Edit, contentDescription = null) },
+                modifier = Modifier.clickable {
+                    showAddSheet = false
+                    onManualEntry()
+                }
+            )
+            Spacer(Modifier.height(16.dp))
         }
     }
 
@@ -91,7 +120,7 @@ fun CardListScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = onAddClick) {
+            FloatingActionButton(onClick = { showAddSheet = true }) {
                 Icon(Icons.Default.Add, contentDescription = "Ajouter")
             }
         }
