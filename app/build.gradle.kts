@@ -7,11 +7,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.fidcard"
+    namespace = "com.example.fidelya"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.fidcard"
+        applicationId = "com.example.fidelya"
         minSdk = 26
         targetSdk = 35
         versionCode = 1

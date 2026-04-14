@@ -21,5 +21,5 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "FidCard"
+rootProject.name = "Fidelya"
 include(":app")
