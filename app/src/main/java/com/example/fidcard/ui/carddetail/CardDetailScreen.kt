@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
@@ -171,7 +172,8 @@ fun CardDetailScreen(
                     Image(
                         bitmap = bmp.asImageBitmap(),
                         contentDescription = "Code-barres",
-                        modifier = Modifier.fillMaxWidth().height(100.dp)
+                        contentScale = ContentScale.FillWidth,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
                 Text(card.cardNumber, style = MaterialTheme.typography.bodyMedium)
@@ -220,7 +222,8 @@ fun CheckoutOverlay(cardNumber: String, format: String, onDismiss: () -> Unit) {
                 Image(
                     bitmap = it.asImageBitmap(),
                     contentDescription = "Code caisse",
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)
+                    contentScale = ContentScale.FillWidth,
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
             Text(cardNumber, fontSize = 20.sp, color = Color.Black)
