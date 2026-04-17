@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.beninho.fidelya.data.repository.CardRepository
+import androidx.core.graphics.toColorInt
 
 val PALETTE = listOf(
     // Rouges / Roses
@@ -116,7 +117,7 @@ fun CardEditScreen(
                     onValueChange = {},
                     readOnly = true,
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(formatExpanded) },
-                    modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth()
+                    modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable).fillMaxWidth()
                 )
                 ExposedDropdownMenu(
                     expanded = formatExpanded,
@@ -137,7 +138,7 @@ fun CardEditScreen(
             ) {
                 PALETTE.forEach { hex ->
                     val color = runCatching {
-                        Color(android.graphics.Color.parseColor(hex))
+                        Color(hex.toColorInt())
                     }.getOrDefault(Color.Gray)
                     Box(
                         Modifier

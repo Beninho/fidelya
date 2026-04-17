@@ -3,6 +3,7 @@
 
 # Android
 *.iml
+*.hprof
 .gradle/
 local.properties
 .idea/

@@ -38,6 +38,36 @@ Application Android de gestion de cartes de fidélité. Scannez ou saisissez vos
 
 Le build release active R8 (minification + shrinking des ressources) pour un APK optimisé.
 
+## Tests
+
+### Tests unitaires (JVM)
+
+```bash
+./gradlew test
+```
+
+Couvre : `CardRepositoryImpl`, `CardListViewModel`, `CardEditViewModel`, `CardDetailViewModel`.
+
+### Tests instrumentés (appareil/émulateur)
+
+```bash
+./gradlew connectedAndroidTest
+```
+
+Couvre : `CardListScreen`, `CardEditScreen` (Compose UI tests).
+
+Nécessite un émulateur démarré ou un device connecté en USB debug.
+
+### Variante spécifique
+
+```bash
+# Tests unitaires d'un seul module
+./gradlew :app:testDebugUnitTest
+
+# Tests instrumentés debug uniquement
+./gradlew :app:connectedDebugAndroidTest
+```
+
 ## Structure du projet
 
 ```
