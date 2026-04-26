@@ -1,5 +1,6 @@
 package com.beninho.fidelya.ui.carddetail
 
+import android.content.pm.ActivityInfo
 import android.graphics.Bitmap
 import android.view.WindowManager
 import androidx.compose.foundation.Image
@@ -80,6 +81,7 @@ fun CardDetailScreen(
         val window = (context as? android.app.Activity)?.window
         val controller = window?.let { WindowInsetsControllerCompat(it, view) }
 
+        val activity = context as? android.app.Activity
         if (wasCheckout && window != null && controller != null) {
             controller.hide(WindowInsetsCompat.Type.systemBars())
             controller.systemBarsBehavior =
@@ -87,6 +89,7 @@ fun CardDetailScreen(
             val lp = window.attributes
             lp.screenBrightness = 1f
             window.attributes = lp
+            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LOCKED
         }
 
         onDispose {
@@ -95,6 +98,7 @@ fun CardDetailScreen(
                 val lp = window.attributes
                 lp.screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
                 window.attributes = lp
+                activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
             }
         }
     }
