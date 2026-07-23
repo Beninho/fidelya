@@ -18,9 +18,9 @@ android {
     defaultConfig {
         applicationId = "com.beninho.fidelya"
         minSdk = 26
-        targetSdk = 35
-        versionCode = 2
-        versionName = "1.01"
+        targetSdk = 36
+        versionCode = 3
+        versionName = "1.02"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
