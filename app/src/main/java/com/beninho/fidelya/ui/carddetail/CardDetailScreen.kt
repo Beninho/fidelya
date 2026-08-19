@@ -31,6 +31,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.beninho.fidelya.barcode.SupportedBarcodeFormats
 import com.beninho.fidelya.data.repository.CardRepository
+import com.beninho.fidelya.ui.theme.cardForegroundColor
+import com.beninho.fidelya.ui.theme.parseCardColor
 import com.google.zxing.MultiFormatWriter
 
 fun encodeBarcode(content: String, format: String, width: Int, height: Int): Bitmap? {
@@ -124,9 +126,8 @@ fun CardDetailScreen(
         }
     ) { padding ->
         state.card?.let { card ->
-            val bgColor = runCatching {
-                Color(android.graphics.Color.parseColor(card.backgroundColor))
-            }.getOrDefault(Color.Gray)
+            val bgColor = parseCardColor(card.backgroundColor)
+            val fgColor = cardForegroundColor(bgColor)
             val barcodeBitmap = remember(card.cardNumber, card.barcodeFormat) {
                 encodeBarcode(card.cardNumber, card.barcodeFormat, 600, 200)
             }
@@ -152,13 +153,13 @@ fun CardDetailScreen(
                         Column(Modifier.align(Alignment.BottomStart)) {
                             Text(
                                 card.storeName,
-                                color = Color.White,
+                                color = fgColor,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 18.sp
                             )
                             Text(
                                 card.cardNumber,
-                                color = Color.White.copy(alpha = 0.85f),
+                                color = fgColor.copy(alpha = 0.85f),
                                 fontSize = 14.sp
                             )
                         }

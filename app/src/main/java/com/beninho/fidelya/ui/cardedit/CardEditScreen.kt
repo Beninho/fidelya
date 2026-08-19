@@ -5,41 +5,23 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.beninho.fidelya.barcode.SupportedBarcodeFormats
 import com.beninho.fidelya.data.repository.CardRepository
-import androidx.core.graphics.toColorInt
+import com.beninho.fidelya.ui.theme.CardPalette
+import com.beninho.fidelya.ui.theme.cardForegroundColor
+import com.beninho.fidelya.ui.theme.parseCardColor
 
-val PALETTE = listOf(
-    // Rouges / Roses
-    "#E53935", "#E91E63", "#F06292",
-    // Oranges
-    "#F57C00", "#FF7043",
-    // Jaunes
-    "#F9A825", "#FDD835",
-    // Verts
-    "#388E3C", "#43A047", "#00897B",
-    // Bleus
-    "#1565C0", "#039BE5", "#00838F",
-    // Violets / Indigo
-    "#5C6BC0", "#7B1FA2", "#9C27B0",
-    // Marrons / Gris chauds
-    "#4E342E", "#795548",
-    // Gris / Ardoise
-    "#37474F", "#546E7A",
-    // Noir / Blanc
-    "#212121", "#FAFAFA"
-)
+val PALETTE = CardPalette
 val FORMATS = SupportedBarcodeFormats.names.toList()
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -138,16 +120,16 @@ fun CardEditScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 PALETTE.forEach { hex ->
-                    val color = runCatching {
-                        Color(hex.toColorInt())
-                    }.getOrDefault(Color.Gray)
+                    val color = parseCardColor(hex)
                     Box(
                         Modifier
                             .size(36.dp)
-                            .background(color, CircleShape)
+                            .background(color, RectangleShape)
                             .then(
+                                // Le liseré reprend la couleur du texte de la carte : sur les pas
+                                // clairs de la rampe, un liseré blanc serait invisible.
                                 if (state.backgroundColor == hex)
-                                    Modifier.border(3.dp, Color.White, CircleShape)
+                                    Modifier.border(3.dp, cardForegroundColor(color), RectangleShape)
                                 else
                                     Modifier
                             )

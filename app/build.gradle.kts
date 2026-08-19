@@ -53,6 +53,16 @@ android {
     buildFeatures {
         compose = true
     }
+
+    // Les schémas Room exportés servent de fixtures à MigrationTestHelper : ils
+    // doivent être empaquetés dans l'APK de test.
+    sourceSets {
+        getByName("androidTest").assets.srcDirs("$projectDir/schemas")
+    }
+}
+
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile>().configureEach {
@@ -113,6 +123,8 @@ dependencies {
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.room.testing)
     androidTestImplementation(libs.androidx.ui.test.junit4)
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.androidx.room.testing)
     androidTestImplementation(libs.mockito.kotlin)
     androidTestImplementation(libs.mockito.android)
     debugImplementation(libs.androidx.ui.test.manifest)

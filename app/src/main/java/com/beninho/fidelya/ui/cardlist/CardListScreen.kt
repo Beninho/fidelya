@@ -17,7 +17,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -29,6 +28,8 @@ import com.beninho.fidelya.backup.BackupManager
 import com.beninho.fidelya.data.order.CardOrderStore
 import com.beninho.fidelya.data.repository.CardRepository
 import com.beninho.fidelya.domain.model.LoyaltyCard
+import com.beninho.fidelya.ui.theme.cardForegroundColor
+import com.beninho.fidelya.ui.theme.parseCardColor
 import kotlinx.coroutines.launch
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyGridState
@@ -178,9 +179,8 @@ fun LoyaltyCardItem(
     onDelete: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val bgColor = runCatching {
-        Color(android.graphics.Color.parseColor(card.backgroundColor))
-    }.getOrDefault(Color.Gray)
+    val bgColor = parseCardColor(card.backgroundColor)
+    val fgColor = cardForegroundColor(bgColor)
 
     Card(
         modifier = modifier
@@ -201,14 +201,14 @@ fun LoyaltyCardItem(
             Column(Modifier.align(Alignment.BottomStart)) {
                 Text(
                     card.storeName,
-                    color = Color.White,
+                    color = fgColor,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     "···· ${card.cardNumber.takeLast(4)}",
-                    color = Color.White.copy(alpha = 0.8f),
+                    color = fgColor.copy(alpha = 0.8f),
                     fontSize = 12.sp
                 )
             }
@@ -219,7 +219,7 @@ fun LoyaltyCardItem(
                 Icon(
                     Icons.Default.Delete,
                     contentDescription = "Supprimer",
-                    tint = Color.White.copy(alpha = 0.7f)
+                    tint = fgColor.copy(alpha = 0.7f)
                 )
             }
         }
