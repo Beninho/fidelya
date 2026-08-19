@@ -2,6 +2,7 @@ package com.beninho.fidelya.ui.scan
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.beninho.fidelya.barcode.SupportedBarcodeFormats
 import com.google.mlkit.vision.barcode.common.Barcode
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,16 +30,9 @@ class ScanViewModel : ViewModel() {
     fun onBarcodeDetected(barcode: Barcode) {
         if (!detected.compareAndSet(false, true)) return
         val value = barcode.rawValue ?: run { detected.set(false); return }
-        val format = when (barcode.format) {
-            Barcode.FORMAT_QR_CODE -> "QR_CODE"
-            Barcode.FORMAT_EAN_13 -> "EAN_13"
-            Barcode.FORMAT_EAN_8 -> "EAN_8"
-            Barcode.FORMAT_CODE_128 -> "CODE_128"
-            Barcode.FORMAT_CODE_39 -> "CODE_39"
-            Barcode.FORMAT_PDF417 -> "PDF_417"
-            Barcode.FORMAT_DATA_MATRIX -> "DATA_MATRIX"
-            else -> "QR_CODE"
-        }
+        // Keep scanning rather than storing the card under a format we cannot render back.
+        val format = SupportedBarcodeFormats.nameOf(barcode.format)
+            ?: run { detected.set(false); return }
         _state.value = ScanState.Detected(value, format)
     }
 

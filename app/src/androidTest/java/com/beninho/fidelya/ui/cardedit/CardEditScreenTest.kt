@@ -15,14 +15,14 @@ class CardEditScreenTest {
 
     @Before fun setUp() { repo = mock() }
 
-    @Test fun `save with empty name shows error`() {
+    @Test fun saveWithEmptyNameShowsError() {
         rule.setContent { FidelyaTheme { CardEditScreen(cardId = -1, repository = repo, onSaved = {}, onBack = {}) } }
         rule.onNodeWithText("Enregistrer").performClick()
         rule.onNodeWithText("Le nom est obligatoire").assertIsDisplayed()
         rule.onNodeWithText("Le numéro est obligatoire").assertIsDisplayed()
     }
 
-    @Test fun `prefilled card number appears in field`() {
+    @Test fun prefilledCardNumberAppearsInField() {
         rule.setContent {
             FidelyaTheme {
                 CardEditScreen(

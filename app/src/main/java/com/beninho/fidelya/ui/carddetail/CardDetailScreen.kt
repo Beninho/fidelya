@@ -29,21 +29,13 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.beninho.fidelya.barcode.SupportedBarcodeFormats
 import com.beninho.fidelya.data.repository.CardRepository
-import com.google.zxing.BarcodeFormat
 import com.google.zxing.MultiFormatWriter
 
 fun encodeBarcode(content: String, format: String, width: Int, height: Int): Bitmap? {
-    val zxingFormat = when (format) {
-        "QR_CODE" -> BarcodeFormat.QR_CODE
-        "EAN_13" -> BarcodeFormat.EAN_13
-        "EAN_8" -> BarcodeFormat.EAN_8
-        "CODE_128" -> BarcodeFormat.CODE_128
-        "CODE_39" -> BarcodeFormat.CODE_39
-        "PDF_417" -> BarcodeFormat.PDF_417
-        "DATA_MATRIX" -> BarcodeFormat.DATA_MATRIX
-        else -> BarcodeFormat.QR_CODE
-    }
+    // Falling back to QR_CODE here would silently render a barcode the till cannot read.
+    val zxingFormat = SupportedBarcodeFormats.zxingFormatOf(format) ?: return null
     return runCatching {
         val matrix = MultiFormatWriter().encode(content, zxingFormat, width, height)
         val bmp = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565)
