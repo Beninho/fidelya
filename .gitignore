@@ -32,3 +32,8 @@ release/
 
 # GrepAI
 .grepai/
+
+# Claude Code — local/per-developer config only; shared config (settings.json,
+# agents/, commands/, skills/) stays versioned.
+.claude/settings.local.json
+.claude/*.local.md
