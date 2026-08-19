@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.beninho.fidelya.barcode.SupportedBarcodeFormats
 import com.beninho.fidelya.data.repository.CardRepository
 import androidx.core.graphics.toColorInt
 
@@ -39,7 +40,7 @@ val PALETTE = listOf(
     // Noir / Blanc
     "#212121", "#FAFAFA"
 )
-val FORMATS = listOf("QR_CODE", "EAN_13", "EAN_8", "CODE_128", "CODE_39", "PDF_417", "DATA_MATRIX")
+val FORMATS = SupportedBarcodeFormats.names.toList()
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable

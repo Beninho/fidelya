@@ -46,17 +46,28 @@ Le build release active R8 (minification + shrinking des ressources) pour un APK
 ./gradlew test
 ```
 
-Couvre : `CardRepositoryImpl`, `CardListViewModel`, `CardEditViewModel`, `CardDetailViewModel`.
+Couvre : `CardRepositoryImpl`, `CardListViewModel`, `CardEditViewModel`, `CardDetailViewModel`,
+`SupportedBarcodeFormats`, et le décodage de vraies photos de cartes
+(`app/src/test/resources/barcodes/`, décodées via ZXing — ML Kit ne tourne pas sur JVM).
 
 ### Tests instrumentés (appareil/émulateur)
 
 ```bash
+scripts/prepare-emulator.sh      # une fois par boot d'émulateur
 ./gradlew connectedAndroidTest
 ```
 
 Couvre : `CardListScreen`, `CardEditScreen` (Compose UI tests).
 
 Nécessite un émulateur démarré ou un device connecté en USB debug.
+
+`scripts/prepare-emulator.sh` déverrouille l'écran et coupe les animations. Sans ça, tous les tests
+utilisant `createComposeRule()` échouent avec `No compose hierarchies found in the app` : l'écran de
+verrouillage empêche l'activité de test d'atteindre le premier plan. Rien de tout ça ne survit à un
+cold boot.
+
+Les noms de méthodes de test instrumentés doivent rester en camelCase (pas de backticks avec
+espaces) : `minSdk = 26` implique DEX < 040, qui interdit les espaces dans les noms de méthode.
 
 ### Variante spécifique
 

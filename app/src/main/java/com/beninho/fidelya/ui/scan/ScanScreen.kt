@@ -27,6 +27,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.beninho.fidelya.barcode.SupportedBarcodeFormats
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
@@ -134,12 +135,10 @@ fun CameraPreview(onBarcode: (Barcode) -> Unit) {
         onDispose { executor.shutdown() }
     }
     val options = remember {
+        val formats = SupportedBarcodeFormats.mlKitFormats
         BarcodeScannerOptions.Builder()
-            .setBarcodeFormats(
-                Barcode.FORMAT_QR_CODE, Barcode.FORMAT_EAN_13, Barcode.FORMAT_EAN_8,
-                Barcode.FORMAT_CODE_128, Barcode.FORMAT_CODE_39,
-                Barcode.FORMAT_PDF417, Barcode.FORMAT_DATA_MATRIX
-            ).build()
+            .setBarcodeFormats(formats.first(), *formats.drop(1).toIntArray())
+            .build()
     }
     val scanner = remember { BarcodeScanning.getClient(options) }
     DisposableEffect(Unit) {
