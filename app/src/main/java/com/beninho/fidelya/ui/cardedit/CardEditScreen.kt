@@ -125,13 +125,16 @@ fun CardEditScreen(
                         Modifier
                             .size(36.dp)
                             .background(color, RectangleShape)
-                            .then(
-                                // Le liseré reprend la couleur du texte de la carte : sur les pas
-                                // clairs de la rampe, un liseré blanc serait invisible.
-                                if (state.backgroundColor == hex)
-                                    Modifier.border(3.dp, cardForegroundColor(color), RectangleShape)
-                                else
-                                    Modifier
+                            // Liseré permanent : plusieurs pas de la rampe Modernist tombent sur
+                            // le fond du thème (#2D2B2B est exactement Neutral900 en sombre,
+                            // #F8F4F4 frôle ModernistBg en clair) et disparaîtraient sans lui.
+                            // La sélection reprend la couleur du texte de la carte : sur les pas
+                            // clairs de la rampe, un liseré blanc serait invisible.
+                            .border(
+                                if (state.backgroundColor == hex) 3.dp else 1.dp,
+                                if (state.backgroundColor == hex) cardForegroundColor(color)
+                                else MaterialTheme.colorScheme.outlineVariant,
+                                RectangleShape
                             )
                             .clickable { vm.onColorChange(hex) }
                     )

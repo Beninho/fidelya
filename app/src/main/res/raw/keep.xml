@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  L'OFL 1.1 exige que la licence accompagne la fonte. `archivo_ofl.txt` n'est
+  référencé par aucun code, donc `isShrinkResources` le retirait de l'APK
+  release : on le marque explicitement à conserver.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@raw/archivo_ofl" />

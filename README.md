@@ -136,6 +136,16 @@ Archivo est distribuée sous **SIL Open Font License 1.1**, dont les termes
 imposent de livrer la licence avec la police. Le texte intégral vit dans
 `app/src/main/res/raw/archivo_ofl.txt` et est embarqué dans l'APK.
 
+Aucun code ne référence cette ressource, donc `isShrinkResources` la retirait
+des builds release : `app/src/main/res/raw/keep.xml` la marque à conserver. Pour
+vérifier après un changement de configuration release :
+
+```bash
+./gradlew :app:assembleRelease
+# doit lister un res/*.txt (le nom est obfusqué par le shrinker, ex. res/qb.txt)
+unzip -l app/build/outputs/apk/release/app-release.apk | grep 'res/.*\.txt'
+```
+
 - Police : [Archivo](https://fonts.google.com/specimen/Archivo) — Omnibus-Type
 - Licence : [SIL OFL 1.1](https://openfontlicense.org/)
 

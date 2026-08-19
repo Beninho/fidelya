@@ -195,6 +195,7 @@ fun LoyaltyCardItem(
         Box(Modifier.fillMaxSize().padding(12.dp)) {
             Text(
                 text = card.logoEmoji ?: card.storeName.take(1).uppercase(),
+                color = fgColor,
                 fontSize = 28.sp,
                 modifier = Modifier.align(Alignment.TopStart)
             )
@@ -206,10 +207,13 @@ fun LoyaltyCardItem(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
+                // 14sp gras, à pleine opacité : c'est le seuil « texte large » de WCAG, le
+                // seul que les pas médians de la rampe atteignent (~3.85:1). Cf. CardPalette.
                 Text(
                     "···· ${card.cardNumber.takeLast(4)}",
-                    color = fgColor.copy(alpha = 0.8f),
-                    fontSize = 12.sp
+                    color = fgColor,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold
                 )
             }
             IconButton(

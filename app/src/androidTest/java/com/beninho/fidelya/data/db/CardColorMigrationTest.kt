@@ -40,7 +40,7 @@ class CardColorMigrationTest {
                 (id, storeName, cardNumber, barcodeFormat, backgroundColor, logoUri, logoEmoji, createdAt, updatedAt)
             VALUES (?, ?, ?, ?, ?, NULL, NULL, ?, ?)
             """.trimIndent(),
-            arrayOf(id, storeName, "123456789$id", "EAN_13", color, 1_700_000_000L, 1_700_000_000L)
+            arrayOf<Any>(id, storeName, "123456789$id", "EAN_13", color, 1_700_000_000L, 1_700_000_000L)
         )
     }
 

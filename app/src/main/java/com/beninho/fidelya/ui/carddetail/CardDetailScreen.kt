@@ -147,6 +147,7 @@ fun CardDetailScreen(
                     Box(Modifier.fillMaxSize().padding(20.dp)) {
                         Text(
                             card.logoEmoji ?: card.storeName.take(1).uppercase(),
+                            color = fgColor,
                             fontSize = 40.sp,
                             modifier = Modifier.align(Alignment.TopStart)
                         )
@@ -157,10 +158,13 @@ fun CardDetailScreen(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 18.sp
                             )
+                            // Voir CardListScreen : 14sp gras à pleine opacité pour rester
+                            // au-dessus du seuil « texte large » de WCAG sur toute la rampe.
                             Text(
                                 card.cardNumber,
-                                color = fgColor.copy(alpha = 0.85f),
-                                fontSize = 14.sp
+                                color = fgColor,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold
                             )
                         }
                     }

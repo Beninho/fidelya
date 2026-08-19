@@ -18,9 +18,11 @@ val CardPalette: List<String> = MODERNIST_CARD_COLORS
  * la même règle, en basculant sur la luminance du fond.
  *
  * Le seuil 0.2 est le point où les deux options offrent le même contraste
- * (~3.8:1). Les fonds proches de ce seuil — les neutres 500 et 600 — ne
- * satisfont donc AA que pour le texte large : le nom du magasin (gras) passe,
- * le numéro en 12–14sp non.
+ * (~3.85:1). Les fonds qui en sont proches — les neutres 500 et 600, ainsi que
+ * l'accent #DD2B0F à 4.25:1 — n'atteignent donc AA que pour le texte large.
+ * Plutôt que d'amputer la rampe, tout le texte posé sur une carte franchit ce
+ * seuil : nom du magasin et numéro en gras, ≥14sp, à pleine opacité (cf.
+ * CardListScreen et CardDetailScreen).
  */
 fun cardForegroundColor(background: Color): Color =
     if (background.luminance() > 0.2f) ModernistText else ModernistBg
