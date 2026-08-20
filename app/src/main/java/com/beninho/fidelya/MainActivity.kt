@@ -76,6 +76,14 @@ fun FidelyaNavHost(settings: AppSettings, startDestination: String) {
     val app = context.applicationContext as FidelyaApp
     val scope = rememberCoroutineScope()
 
+    /** Supprime une carte et son logo — le fichier survivrait à la ligne en base. */
+    fun deleteCard(card: LoyaltyCard) {
+        scope.launch {
+            app.repository.delete(card)
+            app.logoStore.delete(card.logoUri)
+        }
+    }
+
     /** Une carte reçue par partage n'a pas d'identifiant : `save` l'insère. */
     fun addShared(card: LoyaltyCard) {
         scope.launch { app.repository.save(card) }
@@ -187,7 +195,8 @@ fun FidelyaNavHost(settings: AppSettings, startDestination: String) {
                 repository = app.repository,
                 onAccept = ::addShared,
                 onReject = { navController.popBackStack("cardList", false) },
-                onOpenDuplicate = { id -> navController.navigate("cardDetail/$id") }
+                onOpenDuplicate = { id -> navController.navigate("cardDetail/$id") },
+                onDeleteDuplicate = ::deleteCard
             )
         }
         composable("scan") {

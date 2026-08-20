@@ -57,6 +57,10 @@ class CardEditScreenTest {
         rule.onNodeWithText("Carte déjà enregistrée").assertIsDisplayed()
         rule.onNodeWithText("Voir la carte existante").assertIsDisplayed()
 
+        // En création, rien en base à supprimer : l'action n'est pas proposée.
+        rule.onNodeWithText("Supprimer cette carte").assertDoesNotExist()
+        rule.onNodeWithText("Supprimer l'autre carte").assertIsDisplayed()
+
         rule.onNodeWithText("Annuler").performClick()
         rule.onNodeWithText("Carte déjà enregistrée").assertDoesNotExist()
 
@@ -68,6 +72,33 @@ class CardEditScreenTest {
         rule.onNodeWithText("Enregistrer quand même").performClick()
 
         runBlocking { verify(repo).save(any()) }
+    }
+
+    @Test fun duplicateAlertOnEditCanDeleteEitherCard() {
+        val edited = LoyaltyCard(
+            id = 7L, storeName = "Carrefour", cardNumber = "9999999",
+            barcodeFormat = "EAN_13", backgroundColor = "#B71C1C"
+        )
+        val other = edited.copy(id = 8L, storeName = "Carrefour Ancienne")
+        runBlocking {
+            whenever(repo.getById(7L)).thenReturn(edited)
+            whenever(repo.findDuplicate(any(), any())).thenReturn(other)
+        }
+
+        rule.setContent {
+            FidelyaTheme {
+                CardEditScreen(
+                    cardId = 7L, repository = repo, logoStore = logoStore,
+                    onSaved = {}, onBack = {}
+                )
+            }
+        }
+
+        rule.onNodeWithText("Enregistrer").performClick()
+        rule.onNodeWithText("Supprimer l'autre carte").assertIsDisplayed()
+        rule.onNodeWithText("Supprimer cette carte").performClick()
+
+        runBlocking { verify(repo).delete(edited) }
     }
 
     @Test fun prefilledCardNumberAppearsInField() {

@@ -13,6 +13,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertEquals
@@ -198,5 +199,79 @@ class CardEditViewModelTest {
 
         verify(repository).findDuplicate("1234567890", 42L)
         verify(repository).save(any())
+    }
+
+    @Test
+    fun `deleting the other card resumes the interrupted save`() = runTest {
+        whenever(repository.findDuplicate(any(), any())).thenReturn(existing, null)
+        whenever(repository.save(any())).thenReturn(2L)
+
+        val vm = CardEditViewModel(repository, logoStore, cardId = -1L)
+        vm.onStoreNameChange("Carrefour Market")
+        vm.onCardNumberChange("1234567890")
+        vm.save()
+        advanceUntilIdle()
+        vm.onDeleteDuplicate()
+        advanceUntilIdle()
+
+        verify(repository).delete(existing)
+        verify(logoStore).delete(existing.logoUri)
+        // L'enregistrement reprend tout seul : le doublon n'existe plus.
+        verify(repository).save(any())
+        vm.uiState.test {
+            assertNull(awaitItem().duplicate)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `deleting the other card from the opening alert does not save`() = runTest {
+        whenever(repository.findDuplicate(any(), any())).thenReturn(existing)
+
+        val vm = CardEditViewModel(
+            repository, logoStore, cardId = -1L, prefilledCardNumber = "1234567890"
+        )
+        advanceUntilIdle()
+        vm.onDeleteDuplicate()
+        advanceUntilIdle()
+
+        verify(repository).delete(existing)
+        verify(repository, never()).save(any())
+    }
+
+    @Test
+    fun `deleting the edited card removes it and leaves the form`() = runTest {
+        val edited = existing.copy(id = 7L, logoUri = "/logos/7.png")
+        whenever(repository.getById(7L)).thenReturn(edited)
+        whenever(repository.findDuplicate(any(), any())).thenReturn(existing)
+
+        val vm = CardEditViewModel(repository, logoStore, cardId = 7L)
+        advanceUntilIdle()
+        vm.save()
+        advanceUntilIdle()
+        vm.onDeleteSelf()
+        advanceUntilIdle()
+
+        verify(repository).delete(edited)
+        verify(logoStore).delete("/logos/7.png")
+        verify(repository, never()).save(any())
+        vm.uiState.test {
+            assertTrue(awaitItem().isDeleted)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `deleting the edited card is a no-op while creating`() = runTest {
+        val vm = CardEditViewModel(repository, logoStore, cardId = -1L)
+        vm.onDeleteSelf()
+        advanceUntilIdle()
+
+        // Rien en base à supprimer : ni suppression, ni sortie du formulaire.
+        verify(repository, never()).delete(any())
+        vm.uiState.test {
+            assertFalse(awaitItem().isDeleted)
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 }

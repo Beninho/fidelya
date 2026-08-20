@@ -577,17 +577,32 @@ private fun ModernistButtonSurface(
 fun ModernistOutlinedButton(
     text: String,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    color: Color? = null
 ) {
     ModernistButtonSurface(
         text = text,
         onClick = onClick,
         background = Color.Transparent,
-        contentColor = MaterialTheme.colorScheme.onSurface,
-        border = modernistDividerColor(),
+        contentColor = color ?: MaterialTheme.colorScheme.onSurface,
+        // Une action destructrice porte son filet en `error` : le filet neutre la
+        // rendrait indistinguable de « Voir la carte existante ».
+        border = color ?: modernistDividerColor(),
         modifier = modifier
     )
 }
+
+/**
+ * Une action secondaire de `ModernistDialog`, rendue en bouton à filet.
+ *
+ * `destructive` la passe en `error` : une suppression ne doit pas se lire comme
+ * une navigation.
+ */
+data class ModernistDialogAction(
+    val label: String,
+    val onClick: () -> Unit,
+    val destructive: Boolean = false
+)
 
 /**
  * La modale de la maquette : angles droits, bordure de 2px en encre — le même
@@ -606,8 +621,7 @@ fun ModernistDialog(
     onConfirm: () -> Unit,
     dismissLabel: String,
     onDismiss: () -> Unit,
-    secondaryLabel: String? = null,
-    onSecondary: (() -> Unit)? = null
+    secondaryActions: List<ModernistDialogAction> = emptyList()
 ) {
     Dialog(
         onDismissRequest = onDismiss,
@@ -637,11 +651,12 @@ fun ModernistDialog(
             )
             Column(verticalArrangement = Arrangement.spacedBy(ModernistSpace.s2)) {
                 ModernistBlockButton(text = confirmLabel, onClick = onConfirm)
-                if (secondaryLabel != null && onSecondary != null) {
+                secondaryActions.forEach { action ->
                     ModernistOutlinedButton(
-                        text = secondaryLabel,
-                        onClick = onSecondary,
-                        modifier = Modifier.fillMaxWidth()
+                        text = action.label,
+                        onClick = action.onClick,
+                        modifier = Modifier.fillMaxWidth(),
+                        color = if (action.destructive) MaterialTheme.colorScheme.error else null
                     )
                 }
                 ModernistOutlinedButton(

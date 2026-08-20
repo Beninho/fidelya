@@ -11,7 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -41,7 +41,9 @@ fun ReceiveScreen(
     repository: CardRepository,
     onAccept: (LoyaltyCard) -> Unit,
     onReject: () -> Unit,
-    onOpenDuplicate: (Long) -> Unit = {}
+    onOpenDuplicate: (Long) -> Unit = {},
+    /** Supprime la carte locale qui fait doublon — la base et le logo avec. */
+    onDeleteDuplicate: (LoyaltyCard) -> Unit = {}
 ) {
     val now = remember { System.currentTimeMillis() }
     val shared = remember(payload) { CardShareCodec.decode(payload) }
@@ -49,14 +51,15 @@ fun ReceiveScreen(
 
     // Cet écran est déjà l'étape de confirmation : le doublon ne s'annonce donc
     // pas à l'ouverture mais à l'instant de l'ajout.
-    val duplicate by produceState<LoyaltyCard?>(null, shared, expired) {
-        value = if (shared != null && !expired) {
+    var duplicate by remember(payload) { mutableStateOf<LoyaltyCard?>(null) }
+    LaunchedEffect(shared, expired) {
+        duplicate = if (shared != null && !expired) {
             repository.findDuplicate(shared.toDomain().cardNumber)
         } else {
             null
         }
     }
-    var duplicateShown by remember { mutableStateOf(false) }
+    var duplicateShown by remember(payload) { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -217,16 +220,31 @@ fun ReceiveScreen(
         ModernistDialog(
             title = "Carte déjà enregistrée",
             body = "La carte « ${dup.storeName} » porte déjà le numéro ${dup.cardNumber}. " +
-                "Vous pouvez l'ajouter quand même.",
+                "Vous pouvez l'ajouter quand même, ou supprimer celle qui fait doublon.",
             confirmLabel = "Ajouter quand même",
             onConfirm = {
                 duplicateShown = false
                 onAccept(shared.toDomain())
             },
-            secondaryLabel = "Voir la carte existante",
-            onSecondary = { onOpenDuplicate(dup.id) },
             dismissLabel = "Annuler",
-            onDismiss = { duplicateShown = false }
+            onDismiss = { duplicateShown = false },
+            secondaryActions = listOf(
+                ModernistDialogAction(
+                    label = "Voir la carte existante",
+                    onClick = { onOpenDuplicate(dup.id) }
+                ),
+                ModernistDialogAction(
+                    label = "Supprimer la carte existante",
+                    onClick = {
+                        onDeleteDuplicate(dup)
+                        // L'alerte n'a plus de raison d'être : la carte locale
+                        // vient de partir, l'ajout peut suivre sans avertissement.
+                        duplicate = null
+                        duplicateShown = false
+                    },
+                    destructive = true
+                )
+            )
         )
     }
 }

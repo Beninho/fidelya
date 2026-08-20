@@ -116,7 +116,7 @@ class CardEditViewModel(
                     // ça ferme la fenêtre entre le contrôle et l'insert.
                     val dup = repository.findDuplicate(s.cardNumber.trim(), excludeId())
                     if (dup != null) {
-                        _uiState.update { it.copy(duplicate = dup) }
+                        _uiState.update { it.copy(duplicate = dup, duplicateFromSave = true) }
                         return@launch
                     }
                 }
@@ -147,7 +147,46 @@ class CardEditViewModel(
 
     /** « Annuler » : l'alerte se ferme, le formulaire reste ouvert pour corriger. */
     fun onDuplicateDismissed() {
-        _uiState.update { it.copy(duplicate = null) }
+        _uiState.update { it.copy(duplicate = null, duplicateFromSave = false) }
+    }
+
+    /**
+     * « Supprimer l'autre carte » : c'est celle-ci qu'on garde. Si l'alerte venait
+     * d'un enregistrement, il reprend tout seul — le doublon n'existe plus.
+     */
+    fun onDeleteDuplicate() {
+        val state = _uiState.value
+        val dup = state.duplicate ?: return
+        val resumeSave = state.duplicateFromSave
+        _uiState.update { it.copy(duplicate = null, duplicateFromSave = false) }
+        viewModelScope.launch {
+            repository.delete(dup)
+            logoStore.delete(dup.logoUri)
+            if (resumeSave) save()
+        }
+    }
+
+    /**
+     * « Supprimer cette carte » : l'autre fait déjà le travail. Réservé à
+     * l'édition — en création, il n'y a rien en base à supprimer, `Annuler` suffit.
+     */
+    fun onDeleteSelf() {
+        if (cardId <= 0) return
+        _uiState.update { it.copy(duplicate = null, duplicateFromSave = false) }
+        viewModelScope.launch {
+            val card = repository.getById(cardId) ?: return@launch
+            repository.delete(card)
+            // Deux chemins possibles : celui en base, et celui d'un logo choisi
+            // dans le formulaire mais pas encore enregistré.
+            logoStore.delete(card.logoUri)
+            val pending = _uiState.value.logoPath
+            if (pending != card.logoUri) logoStore.delete(pending)
+            _uiState.update { it.copy(isDeleted = true) }
+        }
+    }
+
+    fun onDeletedConsumed() {
+        _uiState.update { it.copy(isDeleted = false) }
     }
 
     fun onSavedConsumed() {

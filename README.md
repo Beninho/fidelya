@@ -133,10 +133,22 @@ bloqué. Le contrôle est `CardRepository.findDuplicate(cardNumber, excludeId)`,
 une égalité sur le seul `cardNumber` — le format est ignoré, un même code lu en
 QR ou en EAN-13 reste la même carte.
 
-L'alerte (`ModernistDialog`) propose trois issues : *Enregistrer quand même*,
-*Voir la carte existante* (route `cardDetail/{id}`) et *Annuler*. Elle se lève à
-deux moments, parce que les trois chemins d'écriture n'ont pas le même point
-d'entrée :
+L'alerte (`ModernistDialog`) propose *Enregistrer quand même*, *Voir la carte
+existante* (route `cardDetail/{id}`), *Annuler*, et de quoi trancher le doublon
+sur place :
+
+| Action destructrice | Où | Effet |
+|---|---|---|
+| *Supprimer l'autre carte* | Partout | Supprime le doublon trouvé, logo compris. Si l'alerte venait d'un enregistrement, il reprend tout seul — le doublon n'existe plus |
+| *Supprimer cette carte* | Édition seulement | Supprime la carte éditée et revient à la liste. En création il n'y a rien en base à supprimer : *Annuler* suffit à jeter la saisie |
+
+Les deux suppressions sont immédiates, sans second dialogue : l'alerte est déjà
+un point d'arrêt, en empiler un autre alourdirait le geste pour rien. Elles
+portent leur filet en `error` (`ModernistDialogAction.destructive`), sinon elles
+se liraient comme une navigation.
+
+L'alerte se lève à deux moments, parce que les trois chemins d'écriture n'ont pas
+le même point d'entrée :
 
 | Chemin | Moment du contrôle |
 |---|---|
