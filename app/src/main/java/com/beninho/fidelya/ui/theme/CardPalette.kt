@@ -18,7 +18,7 @@ val CardPaletteRows: List<List<String>> = CARD_COLOR_ROWS
  * la même règle, en basculant sur la luminance du fond.
  *
  * Le seuil 0.2 est le point où les deux options offrent le même contraste
- * (~3.85:1). Les 36 pas de la grille l'évitent par construction et tiennent
+ * (~3.85:1). Les 37 pas de la grille l'évitent par construction et tiennent
  * tous AA en texte normal (pire cas 5.3:1).
  *
  * Restent en dessous les fonds hérités de la première palette monochrome, que

@@ -204,8 +204,9 @@ fond. Le rôle `outline` du schéma Material, lui, doit être opaque : il vaut
 Neutral500 (#9B9797), à 9 unités du #9F9D9D obtenu en aplatissant le token sur
 `--color-bg` — Neutral600 en était à 61.
 
-Le FAB prend `primary`/`onPrimary` et non le `primaryContainer` par défaut :
-`.btn-primary` est l'accent plein sur texte `--color-bg`, pas un pêche pâle.
+L'action principale (`ModernistBlockButton`) prend `primary`/`onPrimary` et non
+le `primaryContainer` par défaut : `.btn-primary` est l'accent plein sur texte
+`--color-bg`, pas un pêche pâle.
 
 ### Thème « Encre » (sombre)
 
@@ -251,10 +252,11 @@ et inline l'action principale passait sous la ligne de flottaison. On cliquait
 `CardEditScreenTest.saveWithEmptyNameShowsError` qui l'a détecté.
 
 `theme.json` déclare `imageTreatment: "grayscale"`
-(`.grayscale { filter: grayscale(1) contrast(1.08) }`) mais l'app n'a aucune
-cible : `logoUri` est stocké et sauvegardé sans jamais être affiché, et les
-seules images sont des codes-barres générés en noir et blanc pur — que
-l'overlay caisse doit garder tels quels pour rester lisibles au scanner.
+(`.grayscale { filter: grayscale(1) contrast(1.08) }`). La seule cible est le
+logo d'enseigne : `CardLogo` le rend à travers `modernistGrayscaleFilter()`,
+qui porte cette matrice. Les autres images sont des codes-barres générés en
+noir et blanc pur — que l'overlay caisse doit garder tels quels pour rester
+lisibles au scanner.
 
 Le design system Modernist est `band: "light"` et ne définit pas de thème
 sombre ; celui de l'app vient de la maquette « Encre » (voir plus haut), pas du

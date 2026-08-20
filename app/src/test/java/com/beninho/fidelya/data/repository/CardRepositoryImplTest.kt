@@ -74,6 +74,23 @@ class CardRepositoryImplTest {
     }
 
     @Test
+    fun `save keeps lastUsedAt of an edited card`() = runTest {
+        val id = repository.save(makeCard(storeName = "Decathlon"))
+        repository.markUsed(id)
+
+        val used = repository.getById(id)!!
+        assertNotNull("markUsed should stamp lastUsedAt", used.lastUsedAt)
+
+        // Le formulaire d'édition renvoie une carte sans lastUsedAt : le dépôt
+        // doit le reprendre en base plutôt que de l'effacer.
+        repository.save(used.copy(storeName = "Decathlon Nantes", lastUsedAt = null))
+
+        val edited = repository.getById(id)!!
+        assertEquals("Decathlon Nantes", edited.storeName)
+        assertEquals(used.lastUsedAt, edited.lastUsedAt)
+    }
+
+    @Test
     fun `insertAll bulk inserts correctly`() = runTest {
         val cards = listOf(
             makeCard(storeName = "Adidas", cardNumber = "AD-001"),
