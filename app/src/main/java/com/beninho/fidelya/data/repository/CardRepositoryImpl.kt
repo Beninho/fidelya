@@ -35,4 +35,6 @@ class CardRepositoryImpl(private val dao: LoyaltyCardDao) : CardRepository {
         dao.insertAll(cards.map { it.toEntity() })
 
     override suspend fun getAll(): List<LoyaltyCard> = dao.getAll().map { it.toDomain() }
+
+    override suspend fun markUsed(id: Long) = dao.markUsed(id, System.currentTimeMillis())
 }

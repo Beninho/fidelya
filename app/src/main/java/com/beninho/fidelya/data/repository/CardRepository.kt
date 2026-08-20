@@ -10,4 +10,7 @@ interface CardRepository {
     suspend fun delete(card: LoyaltyCard)
     suspend fun insertAll(cards: List<LoyaltyCard>)
     suspend fun getAll(): List<LoyaltyCard>
+
+    /** Horodate un passage en caisse — alimente « Dernier passage » sur le détail. */
+    suspend fun markUsed(id: Long)
 }

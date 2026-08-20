@@ -14,6 +14,16 @@ import com.beninho.fidelya.domain.color.nearestModernistColor
  * Une carte dont la couleur tombe déjà sur un pas de la palette n'est pas
  * réécrite : la migration est idempotente et ne touche que ce qui change.
  */
+/**
+ * Ajoute `lastUsedAt`, nullable : une carte déjà en base n'a pas d'historique de
+ * passage, et `null` se lit « jamais » plutôt que « le 1er janvier 1970 ».
+ */
+val MIGRATION_2_3 = object : Migration(2, 3) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE loyalty_cards ADD COLUMN lastUsedAt INTEGER")
+    }
+}
+
 val MIGRATION_1_2 = object : Migration(1, 2) {
     override fun migrate(db: SupportSQLiteDatabase) {
         val remapped = mutableListOf<Pair<Long, String>>()

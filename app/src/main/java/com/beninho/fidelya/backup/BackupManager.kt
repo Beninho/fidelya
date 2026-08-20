@@ -18,11 +18,13 @@ data class BackupCard(
     val logoUri: String? = null,
     val logoEmoji: String? = null,
     val createdAt: Long = 0,
-    val updatedAt: Long = 0
+    val updatedAt: Long = 0,
+    // Défaut à null : un fichier exporté avant la v3 ne porte pas ce champ.
+    val lastUsedAt: Long? = null
 )
 
 fun LoyaltyCard.toBackup() = BackupCard(
-    id, storeName, cardNumber, barcodeFormat, backgroundColor, logoUri, logoEmoji, createdAt, updatedAt
+    id, storeName, cardNumber, barcodeFormat, backgroundColor, logoUri, logoEmoji, createdAt, updatedAt, lastUsedAt
 )
 
 fun BackupCard.toDomain() = LoyaltyCard(
@@ -37,7 +39,8 @@ fun BackupCard.toDomain() = LoyaltyCard(
     logoUri = logoUri,
     logoEmoji = logoEmoji,
     createdAt = createdAt,
-    updatedAt = updatedAt
+    updatedAt = updatedAt,
+    lastUsedAt = lastUsedAt
 )
 
 object BackupManager {

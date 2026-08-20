@@ -14,13 +14,14 @@ data class LoyaltyCardEntity(
     val logoUri: String?,
     val logoEmoji: String?,
     val createdAt: Long,
-    val updatedAt: Long
+    val updatedAt: Long,
+    val lastUsedAt: Long? = null
 )
 
 fun LoyaltyCardEntity.toDomain() = LoyaltyCard(
-    id, storeName, cardNumber, barcodeFormat, backgroundColor, logoUri, logoEmoji, createdAt, updatedAt
+    id, storeName, cardNumber, barcodeFormat, backgroundColor, logoUri, logoEmoji, createdAt, updatedAt, lastUsedAt
 )
 
 fun LoyaltyCard.toEntity() = LoyaltyCardEntity(
-    id, storeName, cardNumber, barcodeFormat, backgroundColor, logoUri, logoEmoji, createdAt, updatedAt
+    id, storeName, cardNumber, barcodeFormat, backgroundColor, logoUri, logoEmoji, createdAt, updatedAt, lastUsedAt
 )
