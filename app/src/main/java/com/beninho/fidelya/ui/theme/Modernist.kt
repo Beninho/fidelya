@@ -503,29 +503,6 @@ fun ModernistSquareIconButton(
 }
 
 /**
- * `imageTreatment: "grayscale"` — `.grayscale { filter: grayscale(1) contrast(1.08) }`.
- *
- * Deux matrices composées : désaturation complète, puis un léger gain de
- * contraste centré sur le gris moyen. Modernist n'affiche jamais une photo en
- * couleur ; c'est ce qui tient l'écran ensemble quand le contenu est fourni par
- * l'utilisateur.
- */
-fun modernistGrayscaleFilter(): androidx.compose.ui.graphics.ColorFilter {
-    val matrix = androidx.compose.ui.graphics.ColorMatrix().apply { setToSaturation(0f) }
-    val c = 1.08f
-    val offset = (1f - c) / 2f * 255f
-    matrix *= androidx.compose.ui.graphics.ColorMatrix(
-        floatArrayOf(
-            c, 0f, 0f, 0f, offset,
-            0f, c, 0f, 0f, offset,
-            0f, 0f, c, 0f, offset,
-            0f, 0f, 0f, 1f, 0f
-        )
-    )
-    return androidx.compose.ui.graphics.ColorFilter.colorMatrix(matrix)
-}
-
-/**
  * Le bouton texte des en-têtes de la maquette : capitales, 11px, interlettrage
  * 0.08em, encre atténuée. « Ordre », « Réglages », « Modifier », « Partager ».
  */

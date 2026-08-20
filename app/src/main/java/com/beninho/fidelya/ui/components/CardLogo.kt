@@ -16,7 +16,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import com.beninho.fidelya.data.logo.Logos
-import com.beninho.fidelya.ui.theme.modernistGrayscaleFilter
 
 /**
  * Le logo d'une enseigne, ou son initiale à défaut.
@@ -25,6 +24,9 @@ import com.beninho.fidelya.ui.theme.modernistGrayscaleFilter
  * le fichier est local, de la taille d'une vignette, et une dépendance de plus
  * ne se justifie pas. `Logos.resolve` filtre les chemins étrangers — un backup
  * venu d'un autre téléphone en porte, et on retombe alors sur l'initiale.
+ *
+ * L'image est rendue telle quelle : Modernist désature les photos, mais un logo
+ * d'enseigne se reconnaît à sa couleur, et c'est ce qui rend la liste balayable.
  */
 @Composable
 fun CardLogo(
@@ -48,7 +50,6 @@ fun CardLogo(
                 bitmap = bitmap,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                colorFilter = modernistGrayscaleFilter(),
                 modifier = Modifier.size(size)
             )
         } else {
