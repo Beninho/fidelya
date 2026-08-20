@@ -16,11 +16,13 @@ class CardRepositoryImpl(private val dao: LoyaltyCardDao) : CardRepository {
     override suspend fun save(card: LoyaltyCard): Long {
         val now = System.currentTimeMillis()
         val entity = if (card.id > 0) {
-            // Update: preserve original createdAt from DB
+            // Update: preserve createdAt and lastUsedAt from DB. Le formulaire
+            // d'édition ne connaît ni l'un ni l'autre et les renverrait à zéro.
             val existing = dao.getById(card.id)
             card.toEntity().copy(
                 createdAt = existing?.createdAt ?: now,
-                updatedAt = now
+                updatedAt = now,
+                lastUsedAt = existing?.lastUsedAt
             )
         } else {
             // Insert: set both timestamps
@@ -35,4 +37,6 @@ class CardRepositoryImpl(private val dao: LoyaltyCardDao) : CardRepository {
         dao.insertAll(cards.map { it.toEntity() })
 
     override suspend fun getAll(): List<LoyaltyCard> = dao.getAll().map { it.toDomain() }
+
+    override suspend fun markUsed(id: Long) = dao.markUsed(id, System.currentTimeMillis())
 }

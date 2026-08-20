@@ -3,6 +3,8 @@ package com.beninho.fidelya.ui.cardedit
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import android.net.Uri
+import com.beninho.fidelya.data.logo.LogoStore
 import com.beninho.fidelya.data.repository.CardRepository
 import com.beninho.fidelya.domain.model.LoyaltyCard
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,6 +15,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 class CardEditViewModel(
     private val repository: CardRepository,
+    private val logoStore: LogoStore,
     private val cardId: Long,
     prefilledCardNumber: String? = null,
     prefilledFormat: String? = null
@@ -36,7 +39,8 @@ class CardEditViewModel(
                             cardNumber = card.cardNumber,
                             barcodeFormat = card.barcodeFormat,
                             backgroundColor = card.backgroundColor,
-                            logoEmoji = card.logoEmoji ?: ""
+                            logoEmoji = card.logoEmoji ?: "",
+                            logoPath = card.logoUri
                         )
                     }
                 }
@@ -54,6 +58,25 @@ class CardEditViewModel(
         _uiState.update { it.copy(backgroundColor = value) }
     fun onEmojiChange(value: String) =
         _uiState.update { it.copy(logoEmoji = value) }
+
+    /**
+     * Recopie l'image choisie dans le stockage interne. L'ancien fichier part
+     * dans la foulée : sans ça, changer de logo laisserait un orphelin.
+     */
+    fun onLogoPicked(source: Uri) {
+        viewModelScope.launch {
+            val stored = logoStore.store(source) ?: return@launch
+            val previous = _uiState.value.logoPath
+            _uiState.update { it.copy(logoPath = stored) }
+            if (previous != stored) logoStore.delete(previous)
+        }
+    }
+
+    fun onLogoCleared() {
+        val previous = _uiState.value.logoPath
+        _uiState.update { it.copy(logoPath = null) }
+        logoStore.delete(previous)
+    }
 
     fun save() {
         val s = _uiState.value
@@ -76,6 +99,7 @@ class CardEditViewModel(
                         cardNumber = s.cardNumber.trim(),
                         barcodeFormat = s.barcodeFormat,
                         backgroundColor = s.backgroundColor,
+                        logoUri = s.logoPath,
                         logoEmoji = s.logoEmoji.ifBlank { null }
                     )
                 )
@@ -93,12 +117,15 @@ class CardEditViewModel(
 
 fun cardEditViewModelFactory(
     repository: CardRepository,
+    logoStore: LogoStore,
     cardId: Long,
     prefilledCardNumber: String?,
     prefilledFormat: String?
 ) = object : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         @Suppress("UNCHECKED_CAST")
-        return CardEditViewModel(repository, cardId, prefilledCardNumber, prefilledFormat) as T
+        return CardEditViewModel(
+            repository, logoStore, cardId, prefilledCardNumber, prefilledFormat
+        ) as T
     }
 }

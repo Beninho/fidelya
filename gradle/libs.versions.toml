@@ -1,5 +1,5 @@
 [versions]
-agp = "9.1.1"
+agp = "9.2.1"
 kotlin = "2.3.20"
 ksp = "2.3.6"
 coreKtx = "1.15.0"
@@ -8,7 +8,6 @@ activityCompose = "1.13.0"
 navigationCompose = "2.9.7"
 lifecycleRuntimeKtx = "2.10.0"
 room = "2.8.4"
-reorderable = "3.0.0"
 datastore = "1.2.1"
 cameraX = "1.4.1"
 mlkitBarcode = "17.3.0"
@@ -19,6 +18,7 @@ turbine = "1.2.1"
 coroutinesTest = "1.10.2"
 mockitoKotlin = "5.4.0"
 mockitoAndroid = "5.16.1"
+androidxTestExtJunit = "1.2.1"
 robolectric = "4.16.1"
 
 [libraries]
@@ -51,7 +51,6 @@ mlkit-barcode-scanning = { group = "com.google.mlkit", name = "barcode-scanning"
 zxing-core = { group = "com.google.zxing", name = "core", version.ref = "zxing" }
 # Serialization
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
-reorderable = { group = "sh.calvin.reorderable", name = "reorderable", version.ref = "reorderable" }
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
 # Tests
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -60,6 +59,7 @@ turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine
 mockito-kotlin = { group = "org.mockito.kotlin", name = "mockito-kotlin", version.ref = "mockitoKotlin" }
 mockito-android = { group = "org.mockito", name = "mockito-android", version.ref = "mockitoAndroid" }
 robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
+androidx-test-ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidxTestExtJunit" }
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 

@@ -1,61 +1,68 @@
 package com.beninho.fidelya.ui.cardedit
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.beninho.fidelya.barcode.SupportedBarcodeFormats
+import com.beninho.fidelya.data.logo.LogoStore
 import com.beninho.fidelya.data.repository.CardRepository
-import androidx.core.graphics.toColorInt
+import com.beninho.fidelya.ui.components.CardLogo
+import com.beninho.fidelya.ui.theme.CardPaletteRows
+import com.beninho.fidelya.ui.theme.ModernistBlockButton
+import com.beninho.fidelya.ui.theme.ModernistDivider
+import com.beninho.fidelya.ui.theme.ModernistAlpha
+import com.beninho.fidelya.ui.theme.ModernistSectionLabel
+import com.beninho.fidelya.ui.theme.ModernistSelectField
+import com.beninho.fidelya.ui.theme.ModernistSpace
+import com.beninho.fidelya.ui.theme.ModernistTextField
+import com.beninho.fidelya.ui.theme.cardForegroundColor
+import com.beninho.fidelya.ui.theme.parseCardColor
 
-val PALETTE = listOf(
-    // Rouges / Roses
-    "#E53935", "#E91E63", "#F06292",
-    // Oranges
-    "#F57C00", "#FF7043",
-    // Jaunes
-    "#F9A825", "#FDD835",
-    // Verts
-    "#388E3C", "#43A047", "#00897B",
-    // Bleus
-    "#1565C0", "#039BE5", "#00838F",
-    // Violets / Indigo
-    "#5C6BC0", "#7B1FA2", "#9C27B0",
-    // Marrons / Gris chauds
-    "#4E342E", "#795548",
-    // Gris / Ardoise
-    "#37474F", "#546E7A",
-    // Noir / Blanc
-    "#212121", "#FAFAFA"
-)
+val PALETTE_ROWS = CardPaletteRows
+
+/** Le nombre de colonnes du sélecteur : la plus longue famille, les neutres. */
+val PALETTE_COLUMNS = PALETTE_ROWS.maxOf { it.size }
 val FORMATS = SupportedBarcodeFormats.names.toList()
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CardEditScreen(
     cardId: Long,
     repository: CardRepository,
+    logoStore: LogoStore,
     onSaved: () -> Unit,
     onBack: () -> Unit,
     prefilledCardNumber: String? = null,
     prefilledFormat: String? = null,
     vm: CardEditViewModel = viewModel(
-        factory = cardEditViewModelFactory(repository, cardId, prefilledCardNumber, prefilledFormat)
+        factory = cardEditViewModelFactory(
+            repository, logoStore, cardId, prefilledCardNumber, prefilledFormat
+        )
     )
 ) {
     val state by vm.uiState.collectAsStateWithLifecycle()
+
+    // Sélecteur de photos système : aucune permission de stockage à demander.
+    val logoPicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.PickVisualMedia()
+    ) { uri -> uri?.let(vm::onLogoPicked) }
 
     LaunchedEffect(state.isSaved) {
         if (state.isSaved) {
@@ -66,6 +73,8 @@ fun CardEditScreen(
 
     Scaffold(
         topBar = {
+          // `.nav` porte une bordure basse de 2px en `--color-divider`.
+          Column {
             TopAppBar(
                 title = { Text(if (cardId > 0) "Modifier la carte" else "Nouvelle carte") },
                 navigationIcon = {
@@ -74,6 +83,22 @@ fun CardEditScreen(
                     }
                 }
             )
+            ModernistDivider()
+          }
+        },
+        bottomBar = {
+          // `.btn-block` reste pleine largeur, aligné à gauche et en accent plein ;
+          // seule sa position change. Inline, la grille de neuf familles le poussait
+          // sous la ligne de flottaison : on cliquait « Enregistrer » sans voir les
+          // erreurs de saisie, restées en haut du formulaire. Le filet reprend `.hr`.
+          Column(Modifier.navigationBarsPadding()) {
+            ModernistDivider()
+            ModernistBlockButton(
+                text = "Enregistrer",
+                onClick = vm::save,
+                modifier = Modifier.padding(ModernistSpace.s4)
+            )
+          }
         }
     ) { padding ->
         Column(
@@ -84,41 +109,38 @@ fun CardEditScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            OutlinedTextField(
+            ModernistTextField(
                 value = state.storeName,
                 onValueChange = vm::onStoreNameChange,
-                label = { Text("Nom du magasin") },
-                isError = state.storeNameError != null,
-                supportingText = state.storeNameError?.let { { Text(it) } },
+                label = "Nom du magasin",
+                error = state.storeNameError,
                 modifier = Modifier.fillMaxWidth()
             )
-            OutlinedTextField(
+            ModernistTextField(
                 value = state.cardNumber,
                 onValueChange = vm::onCardNumberChange,
-                label = { Text("Numéro de carte") },
-                isError = state.cardNumberError != null,
-                supportingText = state.cardNumberError?.let { { Text(it) } },
+                label = "Numéro de carte",
+                error = state.cardNumberError,
                 modifier = Modifier.fillMaxWidth()
             )
-            OutlinedTextField(
+            ModernistTextField(
                 value = state.logoEmoji,
                 onValueChange = vm::onEmojiChange,
-                label = { Text("Emoji (optionnel)") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                label = "Emoji (optionnel)",
+                modifier = Modifier.fillMaxWidth()
             )
-            Text("Format du code", style = MaterialTheme.typography.labelMedium)
             var formatExpanded by remember { mutableStateOf(false) }
             ExposedDropdownMenuBox(
                 expanded = formatExpanded,
                 onExpandedChange = { formatExpanded = it }
             ) {
-                OutlinedTextField(
+                ModernistSelectField(
                     value = state.barcodeFormat,
-                    onValueChange = {},
-                    readOnly = true,
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(formatExpanded) },
-                    modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable).fillMaxWidth()
+                    label = "Format du code",
+                    trailing = { ExposedDropdownMenuDefaults.TrailingIcon(formatExpanded) },
+                    modifier = Modifier
+                        .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
+                        .fillMaxWidth()
                 )
                 ExposedDropdownMenu(
                     expanded = formatExpanded,
@@ -132,32 +154,107 @@ fun CardEditScreen(
                     }
                 }
             }
-            Text("Couleur de fond", style = MaterialTheme.typography.labelMedium)
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ModernistSectionLabel("Logo et couleur")
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(ModernistSpace.s3),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                PALETTE.forEach { hex ->
-                    val color = runCatching {
-                        Color(hex.toColorInt())
-                    }.getOrDefault(Color.Gray)
-                    Box(
-                        Modifier
-                            .size(36.dp)
-                            .background(color, CircleShape)
-                            .then(
-                                if (state.backgroundColor == hex)
-                                    Modifier.border(3.dp, Color.White, CircleShape)
-                                else
-                                    Modifier
+                val slotColor = parseCardColor(state.backgroundColor)
+                Box(
+                    Modifier
+                        .size(64.dp)
+                        .background(slotColor, RectangleShape)
+                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RectangleShape)
+                        .clickable {
+                            logoPicker.launch(
+                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                             )
-                            .clickable { vm.onColorChange(hex) }
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    CardLogo(
+                        logoPath = state.logoPath,
+                        fallbackText = state.logoEmoji.ifBlank {
+                            state.storeName.take(1).uppercase().ifBlank { "+" }
+                        },
+                        fallbackColor = cardForegroundColor(slotColor),
+                        size = 64.dp,
+                        fallbackFontSize = 26.sp
+                    )
+                }
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        text = if (state.logoPath == null) "Choisir un logo"
+                        else "Remplacer le logo",
+                        modifier = Modifier.clickable {
+                            logoPicker.launch(
+                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                            )
+                        },
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    if (state.logoPath != null) {
+                        Text(
+                            text = "Retirer",
+                            modifier = Modifier
+                                .padding(top = ModernistSpace.s1)
+                                .clickable(onClick = vm::onLogoCleared),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                    Text(
+                        text = "Le logo n'est jamais téléversé : il est stocké avec la carte " +
+                            "sur le téléphone.",
+                        modifier = Modifier.padding(top = ModernistSpace.s1),
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = ModernistAlpha.Muted)
                     )
                 }
             }
-            Spacer(Modifier.height(8.dp))
-            Button(onClick = vm::save, modifier = Modifier.fillMaxWidth()) {
-                Text("Enregistrer")
+            // Une ligne par famille de teintes, du pas clair au pas soutenu : la grille
+            // se lit comme la palette dont elle est tirée. Un FlowRow ne le garantirait
+            // pas — sa coupure dépend de la largeur d'écran et scinderait les familles.
+            //
+            // Les pastilles se partagent la largeur au lieu de la mesurer : à taille
+            // fixe, les sept pas de la famille neutre débordaient sur un écran de
+            // 360dp. Les familles chromatiques n'en ont que six et laissent donc une
+            // colonne vide en fin de ligne — c'est ce qui garde les pas alignés d'une
+            // famille à l'autre, la grille se lisant aussi en colonnes.
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                PALETTE_ROWS.forEach { family ->
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        family.forEach { hex ->
+                            val color = parseCardColor(hex)
+                            val selected = state.backgroundColor == hex
+                            Box(
+                                Modifier
+                                    .weight(1f)
+                                    .aspectRatio(1f)
+                                    .background(color, RectangleShape)
+                                    // Liseré permanent : plusieurs pas tombent sur le fond du
+                                    // thème (#2D2B2B est exactement Neutral900 en sombre) et
+                                    // disparaîtraient sans lui. La sélection reprend la couleur
+                                    // du texte de la carte : sur les pas clairs de la rampe, un
+                                    // liseré blanc serait invisible.
+                                    .border(
+                                        if (selected) 3.dp else 1.dp,
+                                        if (selected) cardForegroundColor(color)
+                                        else MaterialTheme.colorScheme.outlineVariant,
+                                        RectangleShape
+                                    )
+                                    .clickable { vm.onColorChange(hex) }
+                            )
+                        }
+                        repeat(PALETTE_COLUMNS - family.size) {
+                            Spacer(Modifier.weight(1f))
+                        }
+                    }
+                }
             }
         }
     }

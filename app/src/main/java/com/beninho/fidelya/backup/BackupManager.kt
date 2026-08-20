@@ -2,6 +2,7 @@ package com.beninho.fidelya.backup
 
 import android.content.Context
 import android.net.Uri
+import com.beninho.fidelya.domain.color.nearestModernistColor
 import com.beninho.fidelya.domain.model.LoyaltyCard
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
@@ -17,11 +18,13 @@ data class BackupCard(
     val logoUri: String? = null,
     val logoEmoji: String? = null,
     val createdAt: Long = 0,
-    val updatedAt: Long = 0
+    val updatedAt: Long = 0,
+    // Défaut à null : un fichier exporté avant la v3 ne porte pas ce champ.
+    val lastUsedAt: Long? = null
 )
 
 fun LoyaltyCard.toBackup() = BackupCard(
-    id, storeName, cardNumber, barcodeFormat, backgroundColor, logoUri, logoEmoji, createdAt, updatedAt
+    id, storeName, cardNumber, barcodeFormat, backgroundColor, logoUri, logoEmoji, createdAt, updatedAt, lastUsedAt
 )
 
 fun BackupCard.toDomain() = LoyaltyCard(
@@ -29,11 +32,15 @@ fun BackupCard.toDomain() = LoyaltyCard(
     storeName = storeName,
     cardNumber = cardNumber,
     barcodeFormat = barcodeFormat,
-    backgroundColor = backgroundColor,
+    // Un fichier exporté avant le passage à Modernist porte encore l'ancienne
+    // palette : on le réaligne comme le fait MIGRATION_1_2. Sans effet sur une
+    // couleur déjà conforme.
+    backgroundColor = nearestModernistColor(backgroundColor),
     logoUri = logoUri,
     logoEmoji = logoEmoji,
     createdAt = createdAt,
-    updatedAt = updatedAt
+    updatedAt = updatedAt,
+    lastUsedAt = lastUsedAt
 )
 
 object BackupManager {

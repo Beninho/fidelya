@@ -25,4 +25,7 @@ interface LoyaltyCardDao {
 
     @Delete
     suspend fun delete(card: LoyaltyCardEntity)
+
+    @Query("UPDATE loyalty_cards SET lastUsedAt = :at WHERE id = :id")
+    suspend fun markUsed(id: Long, at: Long)
 }

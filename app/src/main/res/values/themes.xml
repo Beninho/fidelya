@@ -1,4 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.Fidelya" parent="android:Theme.Material" />
+    <!--
+      `NoActionBar` : toute la chrome vient de Compose. Le parent `Theme.Material`
+      d'origine affichait une barre de titre portant `android:label`, soit un
+      bandeau noir « Fidelya » au-dessus de chaque écran.
+
+      Ni `statusBarColor` ni `navigationBarColor` ici : avec `targetSdk 36`
+      l'edge-to-edge est imposé et ces attributs sont ignorés. Les barres sont
+      donc transparentes, les écrans écartent leur contenu avec les insets, et
+      c'est `FidelyaTheme` qui règle la couleur des icônes selon le thème
+      réellement choisi — réglage utilisateur inclus.
+
+      `windowBackground` sert avant que Compose ait la main : c'est ce qu'on voit
+      pendant le lancement. La variante sombre vit dans `values-night/`.
+    -->
+    <style name="Theme.Fidelya" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/modernist_bg</item>
+    </style>
 </resources>

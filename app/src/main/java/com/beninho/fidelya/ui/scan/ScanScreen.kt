@@ -13,6 +13,7 @@ import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.*
+import com.beninho.fidelya.ui.theme.ModernistDivider
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
@@ -77,6 +78,8 @@ fun ScanScreen(
 
     Scaffold(
         topBar = {
+          // `.nav` porte une bordure basse de 2px en `--color-divider`.
+          Column {
             TopAppBar(
                 title = { Text("Scanner une carte") },
                 navigationIcon = {
@@ -85,6 +88,8 @@ fun ScanScreen(
                     }
                 }
             )
+            ModernistDivider()
+          }
         }
     ) { padding ->
         Box(Modifier.fillMaxSize().padding(padding)) {

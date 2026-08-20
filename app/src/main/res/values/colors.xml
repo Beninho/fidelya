@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      Les fonds de fenêtre, en doublon des tokens Kotlin de `ui/theme/Color.kt`.
+      Ils servent avant que Compose ait la main : c'est ce qu'on voit pendant le
+      lancement, et un fond qui ne correspond pas au thème produit un flash.
+    -->
+    <color name="modernist_bg">#F3F2F2</color>
+    <!-- Le fond du thème « Encre » : l'encre de texte du thème clair. -->
+    <color name="modernist_bg_dark">#201E1D</color>
+</resources>

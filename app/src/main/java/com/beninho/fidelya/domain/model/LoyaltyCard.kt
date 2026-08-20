@@ -9,5 +9,7 @@ data class LoyaltyCard(
     val logoUri: String? = null,
     val logoEmoji: String? = null,
     val createdAt: Long = System.currentTimeMillis(),
-    val updatedAt: Long = System.currentTimeMillis()
+    val updatedAt: Long = System.currentTimeMillis(),
+    /** Dernier affichage en caisse. `null` tant que la carte n'a jamais servi. */
+    val lastUsedAt: Long? = null
 )

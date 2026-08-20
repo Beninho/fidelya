@@ -5,7 +5,10 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = [LoyaltyCardEntity::class], version = 1, exportSchema = false)
+// version 2 : réalignement des fonds de carte sur la palette « Modernist » (MIGRATION_1_2),
+// à schéma constant — seules les données bougent.
+// version 3 : colonne `lastUsedAt`, qui alimente « Dernier passage » sur l'écran de détail.
+@Database(entities = [LoyaltyCardEntity::class], version = 3, exportSchema = true)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun loyaltyCardDao(): LoyaltyCardDao
 
@@ -18,7 +21,8 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "fidelya.db"
-                ).build().also { INSTANCE = it }
+                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                    .build().also { INSTANCE = it }
             }
     }
 }
