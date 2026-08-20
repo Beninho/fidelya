@@ -140,7 +140,10 @@ fun FidelyaNavHost(settings: AppSettings, startDestination: String) {
                 repository = app.repository,
                 logoStore = app.logoStore,
                 onSaved = { navController.popBackStack("cardList", false) },
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                // Sans `popUpTo` : le retour depuis le détail ramène au formulaire
+                // encore rempli, au cas où l'utilisateur voulait juste comparer.
+                onOpenDuplicate = { id -> navController.navigate("cardDetail/$id") }
             )
         }
         composable("reorder") {
@@ -181,8 +184,10 @@ fun FidelyaNavHost(settings: AppSettings, startDestination: String) {
         ) { back ->
             ReceiveScreen(
                 payload = back.arguments?.getString("payload") ?: "",
+                repository = app.repository,
                 onAccept = ::addShared,
-                onReject = { navController.popBackStack("cardList", false) }
+                onReject = { navController.popBackStack("cardList", false) },
+                onOpenDuplicate = { id -> navController.navigate("cardDetail/$id") }
             )
         }
         composable("scan") {

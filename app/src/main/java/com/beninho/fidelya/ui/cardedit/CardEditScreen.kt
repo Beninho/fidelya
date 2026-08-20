@@ -26,6 +26,7 @@ import com.beninho.fidelya.data.repository.CardRepository
 import com.beninho.fidelya.ui.components.CardLogo
 import com.beninho.fidelya.ui.theme.CardPaletteRows
 import com.beninho.fidelya.ui.theme.ModernistBlockButton
+import com.beninho.fidelya.ui.theme.ModernistDialog
 import com.beninho.fidelya.ui.theme.ModernistDivider
 import com.beninho.fidelya.ui.theme.ModernistAlpha
 import com.beninho.fidelya.ui.theme.ModernistSectionLabel
@@ -49,6 +50,7 @@ fun CardEditScreen(
     logoStore: LogoStore,
     onSaved: () -> Unit,
     onBack: () -> Unit,
+    onOpenDuplicate: (Long) -> Unit = {},
     prefilledCardNumber: String? = null,
     prefilledFormat: String? = null,
     vm: CardEditViewModel = viewModel(
@@ -257,5 +259,19 @@ fun CardEditScreen(
                 }
             }
         }
+    }
+
+    state.duplicate?.let { dup ->
+        ModernistDialog(
+            title = "Carte déjà enregistrée",
+            body = "La carte « ${dup.storeName} » porte déjà le numéro ${dup.cardNumber}. " +
+                "Vous pouvez l'enregistrer quand même.",
+            confirmLabel = "Enregistrer quand même",
+            onConfirm = vm::onDuplicateAccepted,
+            secondaryLabel = "Voir la carte existante",
+            onSecondary = { onOpenDuplicate(dup.id) },
+            dismissLabel = "Annuler",
+            onDismiss = vm::onDuplicateDismissed
+        )
     }
 }

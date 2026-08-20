@@ -12,12 +12,17 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
+import org.mockito.kotlin.any
 import org.mockito.kotlin.argumentCaptor
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
@@ -86,5 +91,112 @@ class CardEditViewModelTest {
             assertEquals("Auchan", state.storeName)
             cancelAndIgnoreRemainingEvents()
         }
+    }
+
+    private val existing = LoyaltyCard(
+        id = 42L,
+        storeName = "Carrefour",
+        cardNumber = "1234567890",
+        barcodeFormat = "EAN_13",
+        backgroundColor = "#B71C1C"
+    )
+
+    @Test
+    fun `prefilled number already taken raises the duplicate alert`() = runTest {
+        whenever(repository.findDuplicate(eq("1234567890"), any())).thenReturn(existing)
+
+        val vm = CardEditViewModel(
+            repository, logoStore, cardId = -1L, prefilledCardNumber = "1234567890"
+        )
+        advanceUntilIdle()
+
+        vm.uiState.test {
+            assertEquals(existing, awaitItem().duplicate)
+            cancelAndIgnoreRemainingEvents()
+        }
+        verify(repository, never()).save(any())
+    }
+
+    @Test
+    fun `save on a duplicate opens the alert instead of writing`() = runTest {
+        whenever(repository.findDuplicate(eq("1234567890"), any())).thenReturn(existing)
+
+        val vm = CardEditViewModel(repository, logoStore, cardId = -1L)
+        vm.onStoreNameChange("Carrefour Market")
+        vm.onCardNumberChange("1234567890")
+        vm.save()
+        advanceUntilIdle()
+
+        vm.uiState.test {
+            val state = awaitItem()
+            assertEquals(existing, state.duplicate)
+            assertFalse(state.isSaved)
+            cancelAndIgnoreRemainingEvents()
+        }
+        verify(repository, never()).save(any())
+    }
+
+    @Test
+    fun `accepting the duplicate saves anyway`() = runTest {
+        whenever(repository.findDuplicate(eq("1234567890"), any())).thenReturn(existing)
+        whenever(repository.save(any())).thenReturn(2L)
+
+        val vm = CardEditViewModel(repository, logoStore, cardId = -1L)
+        vm.onStoreNameChange("Carrefour Market")
+        vm.onCardNumberChange("1234567890")
+        vm.save()
+        advanceUntilIdle()
+        vm.onDuplicateAccepted()
+        advanceUntilIdle()
+
+        val captor = argumentCaptor<LoyaltyCard>()
+        verify(repository).save(captor.capture())
+        assertEquals("Carrefour Market", captor.firstValue.storeName)
+        vm.uiState.test {
+            assertNull(awaitItem().duplicate)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `changing the number cancels a previous acceptance`() = runTest {
+        whenever(repository.findDuplicate(any(), any())).thenReturn(existing)
+
+        val vm = CardEditViewModel(repository, logoStore, cardId = -1L)
+        vm.onStoreNameChange("Carrefour Market")
+        vm.onCardNumberChange("1234567890")
+        vm.save()
+        advanceUntilIdle()
+        vm.onDuplicateAccepted()
+        advanceUntilIdle()
+
+        // Un autre numéro, lui aussi déjà pris : l'alerte doit revenir.
+        vm.onCardNumberChange("999")
+        vm.uiState.test {
+            val state = awaitItem()
+            assertNull(state.duplicate)
+            assertFalse(state.duplicateAccepted)
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        vm.save()
+        advanceUntilIdle()
+        vm.uiState.test {
+            assertEquals(existing, awaitItem().duplicate)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `editing a card excludes it from the duplicate search`() = runTest {
+        whenever(repository.getById(42L)).thenReturn(existing)
+
+        val vm = CardEditViewModel(repository, logoStore, cardId = 42L)
+        advanceUntilIdle()
+        vm.save()
+        advanceUntilIdle()
+
+        verify(repository).findDuplicate("1234567890", 42L)
+        verify(repository).save(any())
     }
 }

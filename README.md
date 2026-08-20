@@ -125,6 +125,32 @@ L'appui long de l'écran 03 réaffecte le geste qui servait à glisser-réordonn
 l'ancienne grille : c'est désormais le rôle de l'écran 08. La dépendance
 `sh.calvin.reorderable` est donc retirée.
 
+### Alerte de doublon
+
+Deux cartes peuvent légitimement porter le même numéro (compte partagé, carte
+remplacée), donc **aucun index unique en base** : le doublon est signalé, jamais
+bloqué. Le contrôle est `CardRepository.findDuplicate(cardNumber, excludeId)`,
+une égalité sur le seul `cardNumber` — le format est ignoré, un même code lu en
+QR ou en EAN-13 reste la même carte.
+
+L'alerte (`ModernistDialog`) propose trois issues : *Enregistrer quand même*,
+*Voir la carte existante* (route `cardDetail/{id}`) et *Annuler*. Elle se lève à
+deux moments, parce que les trois chemins d'écriture n'ont pas le même point
+d'entrée :
+
+| Chemin | Moment du contrôle |
+|---|---|
+| Scan (écran 06 → 07) | À l'ouverture du formulaire : le numéro est déjà connu, inutile d'attendre la saisie du nom |
+| Saisie manuelle (écran 07) | À l'enregistrement — rien à contrôler avant que le numéro soit tapé |
+| Carte reçue (écran 11) | Au clic sur « Ajouter à mes cartes » ; l'écran est déjà l'étape de confirmation |
+
+`excludeId` porte le cas de l'édition : une carte modifiée ne doit pas se
+signaler comme son propre doublon. La recherche vit **dans** la coroutine
+d'enregistrement, pas avant, pour ne pas laisser de fenêtre entre le contrôle et
+l'insert. Un numéro retouché après un « Enregistrer quand même » remet le
+compteur à zéro (`duplicateAccepted = false`), sinon l'acceptation d'un doublon
+couvrirait le suivant.
+
 ### Partage de carte
 
 `domain/share/CardShare.kt`, en Kotlin pur donc testable sans appareil. La charge
@@ -193,6 +219,7 @@ Les quatre premiers fichiers portent les *tokens* ; `Modernist.kt` porte les
 | `.hr`, bordure basse de `.nav` | `ModernistDivider()` | Rien sous les `TopAppBar` ; `HorizontalDivider` fait 1dp, `dividers: "strong"` en demande 2 |
 | `.input` + `.field > label` | `ModernistTextField`, `ModernistSelectField` | `OutlinedTextField` : fond transparent et libellé flottant dans la bordure, un idiome que Modernist n'a pas |
 | `.btn-block` | `ModernistBlockButton` | `Button` centre son libellé ; `buttonAlign: "left"` demande l'inverse |
+| Modale | `ModernistDialog` | `AlertDialog` impose des angles arrondis, une élévation teintée et des actions alignées à droite — trois choses que Modernist refuse |
 | `h6` | `ModernistSectionLabel` | Compose n'a pas de `text-transform` : les capitales sont explicites |
 | `--space-*` | `ModernistSpace` | — |
 | `--shadow-*` | `ModernistElevation` | Équivalence approximative : une ombre CSS porte un flou et une teinte que `Modifier.shadow` ne reproduit pas |

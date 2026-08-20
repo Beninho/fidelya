@@ -14,6 +14,18 @@ interface LoyaltyCardDao {
     @Query("SELECT * FROM loyalty_cards WHERE id = :id")
     suspend fun getById(id: Long): LoyaltyCardEntity?
 
+    /**
+     * La première carte portant ce numéro, `excludeId` mis à part.
+     *
+     * `TRIM` des deux côtés : le formulaire trime avant l'insert, mais une carte
+     * reçue par partage arrive telle quelle du codec.
+     */
+    @Query(
+        "SELECT * FROM loyalty_cards " +
+            "WHERE TRIM(cardNumber) = TRIM(:cardNumber) AND id != :excludeId LIMIT 1"
+    )
+    suspend fun findByCardNumber(cardNumber: String, excludeId: Long = 0): LoyaltyCardEntity?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(card: LoyaltyCardEntity): Long
 

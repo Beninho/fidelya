@@ -91,6 +91,38 @@ class CardRepositoryImplTest {
     }
 
     @Test
+    fun `findDuplicate finds a card by its number`() = runTest {
+        val id = repository.save(makeCard(storeName = "Fnac", cardNumber = "FNAC-77"))
+
+        val dup = repository.findDuplicate("FNAC-77")
+        assertNotNull(dup)
+        assertEquals(id, dup!!.id)
+        assertEquals("Fnac", dup.storeName)
+    }
+
+    @Test
+    fun `findDuplicate returns null for an unknown number`() = runTest {
+        repository.save(makeCard(cardNumber = "FNAC-77"))
+
+        assertNull(repository.findDuplicate("AUTRE-99"))
+    }
+
+    @Test
+    fun `findDuplicate ignores the excluded card`() = runTest {
+        val id = repository.save(makeCard(cardNumber = "FNAC-77"))
+
+        // Le cas de l'édition : la carte modifiée ne doit pas se signaler elle-même.
+        assertNull(repository.findDuplicate("FNAC-77", excludeId = id))
+    }
+
+    @Test
+    fun `findDuplicate tolerates surrounding spaces`() = runTest {
+        repository.save(makeCard(cardNumber = "FNAC-77"))
+
+        assertNotNull(repository.findDuplicate("  FNAC-77  "))
+    }
+
+    @Test
     fun `insertAll bulk inserts correctly`() = runTest {
         val cards = listOf(
             makeCard(storeName = "Adidas", cardNumber = "AD-001"),

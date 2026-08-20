@@ -45,6 +45,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 
 /**
  * Couche composants du design system « Modernist ».
@@ -585,6 +587,71 @@ fun ModernistOutlinedButton(
         border = modernistDividerColor(),
         modifier = modifier
     )
+}
+
+/**
+ * La modale de la maquette : angles droits, bordure de 2px en encre — le même
+ * appui que `ModernistStrongRule` — et les actions empilées pleine largeur.
+ *
+ * Material n'a pas d'équivalent : son `AlertDialog` impose des angles arrondis,
+ * une élévation teintée et des boutons alignés à droite, trois choses que le
+ * design system refuse. `usePlatformDefaultWidth = false` pour que la boîte
+ * suive la largeur de l'écran moins ses marges, comme les écrans pleins.
+ */
+@Composable
+fun ModernistDialog(
+    title: String,
+    body: String,
+    confirmLabel: String,
+    onConfirm: () -> Unit,
+    dismissLabel: String,
+    onDismiss: () -> Unit,
+    secondaryLabel: String? = null,
+    onSecondary: (() -> Unit)? = null
+) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Column(
+            Modifier
+                .padding(horizontal = 24.dp)
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surface)
+                .border(2.dp, MaterialTheme.colorScheme.onSurface, RectangleShape)
+                .padding(18.dp),
+            verticalArrangement = Arrangement.spacedBy(ModernistSpace.s3)
+        ) {
+            Text(
+                text = title,
+                fontFamily = Archivo,
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 20.sp,
+                lineHeight = 24.sp
+            )
+            Text(
+                text = body,
+                fontSize = 14.sp,
+                lineHeight = 22.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Column(verticalArrangement = Arrangement.spacedBy(ModernistSpace.s2)) {
+                ModernistBlockButton(text = confirmLabel, onClick = onConfirm)
+                if (secondaryLabel != null && onSecondary != null) {
+                    ModernistOutlinedButton(
+                        text = secondaryLabel,
+                        onClick = onSecondary,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+                ModernistOutlinedButton(
+                    text = dismissLabel,
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+    }
 }
 
 /**
