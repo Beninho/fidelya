@@ -32,6 +32,20 @@ class CardDetailViewModel(
     }
 
     fun onDeletedConsumed() = _uiState.update { it.copy(isDeleted = false) }
+
+    /**
+     * Horodate le passage en caisse — c'est ce qui alimente « Dernier passage ».
+     * L'état local est mis à jour dans la foulée : l'écran ne réinterroge pas la
+     * base après un retour du mode caisse.
+     */
+    fun markUsed() {
+        viewModelScope.launch {
+            val card = _uiState.value.card ?: return@launch
+            val now = System.currentTimeMillis()
+            repository.markUsed(card.id)
+            _uiState.update { it.copy(card = card.copy(lastUsedAt = now)) }
+        }
+    }
 }
 
 fun cardDetailViewModelFactory(repository: CardRepository, cardId: Long) =

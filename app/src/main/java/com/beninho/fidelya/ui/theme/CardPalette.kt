@@ -2,15 +2,15 @@ package com.beninho.fidelya.ui.theme
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
-import com.beninho.fidelya.domain.color.MODERNIST_CARD_COLORS
+import com.beninho.fidelya.domain.color.CARD_COLOR_ROWS
 import com.beninho.fidelya.domain.color.parseHexChannels
 
 /**
- * Façade Compose de la palette de cartes. La liste et le calcul du pas le plus
+ * Façade Compose de la palette de cartes. La grille et le calcul du pas le plus
  * proche vivent dans `domain.color.ModernistPalette`, hors de toute dépendance
  * Android, pour que la migration de base puisse s'en servir.
  */
-val CardPalette: List<String> = MODERNIST_CARD_COLORS
+val CardPaletteRows: List<List<String>> = CARD_COLOR_ROWS
 
 /**
  * Modernist ne pose jamais de blanc pur sur une couleur : `.btn-primary` écrit
@@ -18,10 +18,13 @@ val CardPalette: List<String> = MODERNIST_CARD_COLORS
  * la même règle, en basculant sur la luminance du fond.
  *
  * Le seuil 0.2 est le point où les deux options offrent le même contraste
- * (~3.85:1). Les fonds qui en sont proches — les neutres 500 et 600, ainsi que
- * l'accent #DD2B0F à 4.25:1 — n'atteignent donc AA que pour le texte large.
- * Plutôt que d'amputer la rampe, tout le texte posé sur une carte franchit ce
- * seuil : nom du magasin et numéro en gras, ≥14sp, à pleine opacité (cf.
+ * (~3.85:1). Les 36 pas de la grille l'évitent par construction et tiennent
+ * tous AA en texte normal (pire cas 5.3:1).
+ *
+ * Restent en dessous les fonds hérités de la première palette monochrome, que
+ * des cartes existantes portent encore : les neutres 500 et 600 à 3.85:1 et
+ * l'ancien accent #DD2B0F à 4.25:1. C'est pour eux que le texte posé sur une
+ * carte est en gras et à 14sp au moins, seuil « texte large » de WCAG (cf.
  * CardListScreen et CardDetailScreen).
  */
 fun cardForegroundColor(background: Color): Color =

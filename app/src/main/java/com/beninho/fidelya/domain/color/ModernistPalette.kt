@@ -4,31 +4,83 @@ import kotlin.math.cbrt
 import kotlin.math.pow
 
 /**
- * Les fonds de carte proposés, pris dans les rampes tonales du design system
- * « Modernist » (projet Claude Design du même nom, `styles.css`).
+ * La grille de fonds proposée au choix, une ligne par famille de teintes.
  *
  * Kotlin pur, sans dépendance Android ni Compose : la couche `data` s'en sert
  * pour migrer les cartes déjà enregistrées, la couche `ui` pour le sélecteur.
  *
- * Modernist est monochrome : les cartes ne se distinguent donc plus par la
- * teinte mais par la valeur. Les trois rampes partagent la même échelle de
- * luminosité, ce qui donne 22 pas nettement séparés à l'œil — les pas 100 à
- * 400 des deux rampes accent sont visuellement identiques et un seul jeu est
- * conservé.
+ * Le thème « Modernist » est monochrome, mais un fond de carte n'est pas une
+ * couleur de thème : c'est de la donnée utilisateur, dont le rôle est de
+ * distinguer les cartes d'un coup d'œil. On garde donc la *construction* de
+ * Modernist et on l'étend à huit familles de teintes.
+ *
+ * Construction, en OKLCH :
+ *  - Luminosité : l'échelle partagée des rampes Modernist, pas 300/500/700/900
+ *    (L = 0.870 / 0.680 / 0.481 / 0.291). Les pas 100 et 200 sont écartés : au
+ *    delà de L 0.93 le gamut sRGB ne laisse plus assez de chroma et toutes les
+ *    teintes y seraient indistinctement blanches.
+ *  - Teintes : 31.5° — celle de l'accent Modernist — puis 70, 110, 148, 192,
+ *    250, 295 et 340°.
+ *  - Chroma : constant par pas (0.090 / 0.170 / 0.130 / 0.075), écrêté au
+ *    gamut. Modernist pousse sa rampe accent au chroma maximal, mais ce maximum
+ *    varie du simple au quadruple selon la teinte : repris tel quel il donne un
+ *    arc-en-ciel de néons disparates. À chroma constant les huit familles se
+ *    lisent comme un seul jeu — et le pas 300 du rouge retombe exactement sur
+ *    le #FFC4B8 de la rampe d'origine, ce qui vérifie la construction.
+ *
+ * La famille neutre garde en plus le pas 100 (#F8F4F4) : c'est la seule où un
+ * quasi-blanc a du sens, et sans lui un fond blanc n'aurait plus d'équivalent.
+ *
+ * Les 37 pas passent WCAG AA (≥ 4.5:1, pire cas 5.3:1) avec l'encre que leur
+ * choisit `cardForegroundColor`.
  */
-val MODERNIST_CARD_COLORS: List<String> = listOf(
-    // Accent — du plus clair au plus soutenu
+val CARD_COLOR_ROWS: List<List<String>> = listOf(
+    listOf("#FFC4B8", "#EE6952", "#993B2C", "#4A1A12"), // rouge — teinte de l'accent Modernist
+    listOf("#FBCA93", "#D18501", "#825100", "#3F2500"), // ambre
+    listOf("#D7DA94", "#9F9F00", "#626200", "#2E2E00"), // olive
+    listOf("#ACE5B3", "#39B457", "#14712F", "#083514"), // vert
+    listOf("#89E7E3", "#01AFAB", "#006C6A", "#003332"), // turquoise
+    listOf("#B4D8FF", "#319CFC", "#0D60A3", "#062D4F"), // bleu
+    listOf("#D7CCFF", "#A17FF5", "#644B9E", "#2F224C"), // violet
+    listOf("#FDBDE7", "#DA69B9", "#8C3B74", "#431A37"), // magenta
+    listOf("#F8F4F4", "#D7D3D3", "#9B9797", "#605D5D", "#2D2B2B") // neutres, rampe Modernist telle quelle
+)
+
+/**
+ * Les pas de la première palette Modernist : rampes accent, accent secondaire
+ * et neutres au complet.
+ *
+ * Ils ne sont plus proposés au choix, mais restent des fonds *valides* — une
+ * carte enregistrée quand le sélecteur était monochrome en porte encore un.
+ * Les conserver ici évite une migration v2 → v3 et permet à
+ * [nearestModernistColor] de les renvoyer sans qu'aucun fond ne sorte de la
+ * palette.
+ */
+val LEGACY_CARD_COLORS: List<String> = listOf(
     "#FFF2EF", "#FFE0D9", "#FFC4B8", "#FF9783", "#FF563C",
     "#DD2B0F", "#AE1800", "#7C1405", "#4D170E",
-    // Accent secondaire — seuls les pas qui divergent de la rampe accent
     "#EF6853", "#C94B39", "#9E3526", "#71261B",
-    // Neutres
     "#F8F4F4", "#EAE7E7", "#D7D3D3", "#BAB6B6", "#9B9797",
     "#7D7979", "#605D5D", "#444141", "#2D2B2B"
 )
 
-/** Couleur de fond par défaut d'une nouvelle carte : le rouge de marque. */
-const val DEFAULT_CARD_COLOR = "#DD2B0F"
+/**
+ * Tous les fonds acceptés : la grille du sélecteur, plus l'héritage monochrome.
+ *
+ * Sert à valider un fond, pas à en choisir un : [nearestModernistColor] ne vise
+ * que la grille. Un pas hérité reste donc lisible et affichable, mais n'est
+ * plus une destination — sinon le rouge de l'ancienne rampe accent capterait
+ * des teintes que la grille sait désormais respecter (un rose Material tombait
+ * sur #DD2B0F au lieu du magenta).
+ */
+val MODERNIST_CARD_COLORS: List<String> =
+    (CARD_COLOR_ROWS.flatten() + LEGACY_CARD_COLORS).distinct()
+
+/** Les seuls fonds que [nearestModernistColor] peut renvoyer. */
+private val remapTargets: List<String> = CARD_COLOR_ROWS.flatten()
+
+/** Fond par défaut d'une nouvelle carte : le pas 500 de la famille rouge. */
+const val DEFAULT_CARD_COLOR = "#EE6952"
 
 /**
  * Décompose une couleur écrite `#RGB`, `#RRGGBB` ou `#AARRGGBB` en canaux
@@ -73,19 +125,19 @@ private fun toOklab(r: Int, g: Int, b: Int): Triple<Double, Double, Double> {
     )
 }
 
-private val paletteOklab: List<Triple<Double, Double, Double>> =
-    MODERNIST_CARD_COLORS.map { hex ->
+private val targetsOklab: List<Triple<Double, Double, Double>> =
+    remapTargets.map { hex ->
         val (r, g, b) = requireNotNull(parseHexChannels(hex)) { "Couleur de palette invalide : $hex" }
         toOklab(r, g, b)
     }
 
 /**
- * Renvoie le pas de la palette Modernist le plus proche de [hex], au sens de
- * l'écart perçu.
+ * Renvoie le pas de la grille le plus proche de [hex], au sens de l'écart perçu.
  *
- * La teinte d'origine est perdue — Modernist n'a qu'une famille chromatique —
- * mais le rapport clair/soutenu est préservé : une couleur vive tombe sur un
- * pas accent, une couleur désaturée sur un neutre de valeur comparable.
+ * La grille couvrant désormais huit teintes, la teinte d'origine survit au
+ * remappage : un fond bleu tombe sur un bleu, un vert sur un vert. Seules les
+ * couleurs très saturées perdent un peu de leur éclat, le chroma de la grille
+ * étant volontairement uniforme.
  *
  * Une couleur illisible retombe sur [DEFAULT_CARD_COLOR].
  */
@@ -95,7 +147,7 @@ fun nearestModernistColor(hex: String): String {
 
     var best = 0
     var bestDistance = Double.MAX_VALUE
-    paletteOklab.forEachIndexed { index, (pl, pa, pb) ->
+    targetsOklab.forEachIndexed { index, (pl, pa, pb) ->
         val dl = l - pl
         val da = a - pa
         val db = bb - pb
@@ -105,5 +157,5 @@ fun nearestModernistColor(hex: String): String {
             best = index
         }
     }
-    return MODERNIST_CARD_COLORS[best]
+    return remapTargets[best]
 }

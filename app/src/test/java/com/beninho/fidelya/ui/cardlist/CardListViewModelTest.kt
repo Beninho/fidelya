@@ -1,6 +1,7 @@
 package com.beninho.fidelya.ui.cardlist
 
 import app.cash.turbine.test
+import com.beninho.fidelya.data.logo.LogoStore
 import com.beninho.fidelya.data.order.CardOrderStore
 import com.beninho.fidelya.data.repository.CardRepository
 import com.beninho.fidelya.domain.model.LoyaltyCard
@@ -25,6 +26,7 @@ class CardListViewModelTest {
     private val testDispatcher = UnconfinedTestDispatcher()
     private lateinit var repository: CardRepository
     private lateinit var orderStore: CardOrderStore
+    private lateinit var logoStore: LogoStore
     private lateinit var vm: CardListViewModel
 
     private val cardA = LoyaltyCard(
@@ -41,6 +43,7 @@ class CardListViewModelTest {
         Dispatchers.setMain(testDispatcher)
         repository = mock()
         orderStore = mock()
+        logoStore = mock()
     }
 
     @After
@@ -52,7 +55,7 @@ class CardListViewModelTest {
     fun `emits cards in original order when no saved order`() = runTest {
         whenever(repository.observeAll()).thenReturn(flowOf(listOf(cardA, cardB)))
         whenever(orderStore.orderFlow).thenReturn(flowOf(emptyList()))
-        vm = CardListViewModel(repository, orderStore)
+        vm = CardListViewModel(repository, orderStore, logoStore)
 
         vm.uiState.test {
             assertEquals(listOf(cardA, cardB), awaitItem().cards)
@@ -64,7 +67,7 @@ class CardListViewModelTest {
     fun `applies saved order when orderFlow has ids`() = runTest {
         whenever(repository.observeAll()).thenReturn(flowOf(listOf(cardA, cardB)))
         whenever(orderStore.orderFlow).thenReturn(flowOf(listOf(2L, 1L)))
-        vm = CardListViewModel(repository, orderStore)
+        vm = CardListViewModel(repository, orderStore, logoStore)
 
         vm.uiState.test {
             assertEquals(listOf(cardB, cardA), awaitItem().cards)
@@ -76,7 +79,7 @@ class CardListViewModelTest {
     fun `new card not in saved order appears at end`() = runTest {
         whenever(repository.observeAll()).thenReturn(flowOf(listOf(cardA, cardB)))
         whenever(orderStore.orderFlow).thenReturn(flowOf(listOf(1L))) // only cardA in saved order
-        vm = CardListViewModel(repository, orderStore)
+        vm = CardListViewModel(repository, orderStore, logoStore)
 
         vm.uiState.test {
             assertEquals(listOf(cardA, cardB), awaitItem().cards)
@@ -88,7 +91,7 @@ class CardListViewModelTest {
     fun `onMove saves new order to store`() = runTest {
         whenever(repository.observeAll()).thenReturn(flowOf(listOf(cardA, cardB)))
         whenever(orderStore.orderFlow).thenReturn(flowOf(emptyList()))
-        vm = CardListViewModel(repository, orderStore)
+        vm = CardListViewModel(repository, orderStore, logoStore)
 
         vm.uiState.test {
             awaitItem() // consume initial state: [cardA, cardB]
@@ -102,7 +105,7 @@ class CardListViewModelTest {
     fun `delete card calls repository delete`() = runTest {
         whenever(repository.observeAll()).thenReturn(flowOf(emptyList()))
         whenever(orderStore.orderFlow).thenReturn(flowOf(emptyList()))
-        vm = CardListViewModel(repository, orderStore)
+        vm = CardListViewModel(repository, orderStore, logoStore)
 
         vm.deleteCard(cardA)
 

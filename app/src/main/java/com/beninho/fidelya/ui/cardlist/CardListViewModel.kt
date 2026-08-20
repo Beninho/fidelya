@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.beninho.fidelya.backup.BackupManager
+import com.beninho.fidelya.data.logo.LogoStore
 import com.beninho.fidelya.data.order.CardOrderStore
 import com.beninho.fidelya.data.repository.CardRepository
 import com.beninho.fidelya.domain.model.LoyaltyCard
@@ -14,7 +15,8 @@ import kotlinx.coroutines.launch
 
 class CardListViewModel(
     private val repository: CardRepository,
-    private val cardOrderStore: CardOrderStore
+    private val cardOrderStore: CardOrderStore,
+    private val logoStore: LogoStore
 ) : ViewModel() {
 
     val uiState: StateFlow<CardListUiState> =
@@ -33,8 +35,16 @@ class CardListViewModel(
     }
 
     fun deleteCard(card: LoyaltyCard) {
-        viewModelScope.launch { repository.delete(card) }
+        viewModelScope.launch {
+            repository.delete(card)
+            // Sans ça le fichier resterait sur le téléphone après la carte.
+            logoStore.delete(card.logoUri)
+        }
     }
+
+    /** Les flèches de l'écran de réorganisation. Aux extrémités, sans effet. */
+    fun moveUp(index: Int) = onMove(index, index - 1)
+    fun moveDown(index: Int) = onMove(index, index + 1)
 
     fun importCards(cards: List<LoyaltyCard>) {
         viewModelScope.launch { repository.insertAll(cards) }
@@ -54,10 +64,13 @@ class CardListViewModel(
     }
 }
 
-fun cardListViewModelFactory(repository: CardRepository, cardOrderStore: CardOrderStore) =
-    object : ViewModelProvider.Factory {
-        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            @Suppress("UNCHECKED_CAST")
-            return CardListViewModel(repository, cardOrderStore) as T
-        }
+fun cardListViewModelFactory(
+    repository: CardRepository,
+    cardOrderStore: CardOrderStore,
+    logoStore: LogoStore
+) = object : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        @Suppress("UNCHECKED_CAST")
+        return CardListViewModel(repository, cardOrderStore, logoStore) as T
     }
+}

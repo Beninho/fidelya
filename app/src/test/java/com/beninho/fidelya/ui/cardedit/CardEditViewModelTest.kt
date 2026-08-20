@@ -1,6 +1,7 @@
 package com.beninho.fidelya.ui.cardedit
 
 import app.cash.turbine.test
+import com.beninho.fidelya.data.logo.LogoStore
 import com.beninho.fidelya.data.repository.CardRepository
 import com.beninho.fidelya.domain.model.LoyaltyCard
 import kotlinx.coroutines.Dispatchers
@@ -25,11 +26,13 @@ class CardEditViewModelTest {
 
     private val testDispatcher = UnconfinedTestDispatcher()
     private lateinit var repository: CardRepository
+    private lateinit var logoStore: LogoStore
 
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         repository = mock()
+        logoStore = mock()
     }
 
     @After
@@ -39,7 +42,7 @@ class CardEditViewModelTest {
 
     @Test
     fun `save with empty name sets error`() = runTest {
-        val vm = CardEditViewModel(repository, cardId = -1L)
+        val vm = CardEditViewModel(repository, logoStore, cardId = -1L)
         // storeName is blank by default, cardNumber too — just call save
         vm.save()
 
@@ -53,7 +56,7 @@ class CardEditViewModelTest {
     @Test
     fun `save valid card calls repository`() = runTest {
         whenever(repository.save(org.mockito.kotlin.any())).thenReturn(1L)
-        val vm = CardEditViewModel(repository, cardId = -1L)
+        val vm = CardEditViewModel(repository, logoStore, cardId = -1L)
         vm.onStoreNameChange("Carrefour")
         vm.onCardNumberChange("1234567890")
 
@@ -75,7 +78,7 @@ class CardEditViewModelTest {
         )
         whenever(repository.getById(5L)).thenReturn(card)
 
-        val vm = CardEditViewModel(repository, cardId = 5L)
+        val vm = CardEditViewModel(repository, logoStore, cardId = 5L)
         advanceUntilIdle()  // wait for init coroutine to complete
 
         vm.uiState.test {

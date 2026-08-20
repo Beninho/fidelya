@@ -49,3 +49,28 @@ val Accent2600 = Color(0xFFC94B39)
 val Accent2700 = Color(0xFF9E3526)
 val Accent2800 = Color(0xFF71261B)
 val Accent2900 = Color(0xFF471D16)
+
+/**
+ * Thème « Encre » — la variante sombre, spécifiée par la maquette
+ * `Fidelya-refonte-encre.dc.html` (« Thème 2 — Encre »).
+ *
+ * Même structure, même parcours : seul le ton change. Le fond passe à l'encre,
+ * les surfaces à #2B2928, et l'accent monte d'un cran sur la rampe (pas 500)
+ * pour tenir le contraste sur foncé — l'encre sur l'accent 500 donne 5.26:1, du
+ * texte clair seulement 2.83:1.
+ *
+ * Les rôles s'inversent : le fond du thème Encre est exactement l'encre de
+ * texte du thème clair, et réciproquement. Ils sont nommés à part plutôt que
+ * réutilisés en croix, pour qu'un appel n'ait pas l'air d'une erreur.
+ */
+val ModernistInkBg = Color(0xFF201E1D)
+val ModernistInkSurface = Color(0xFF2B2928)
+val ModernistInkText = Color(0xFFF3F2F2)
+
+/**
+ * Le fond des lignes de liste, légèrement détaché du fond de l'écran : blanc en
+ * clair, la surface Encre en sombre. C'est ce qui donne à la liste dense sa
+ * lisibilité en balayage.
+ */
+val ModernistRowSurface = Color(0xFFFFFFFF)
+val ModernistInkRowSurface = ModernistInkSurface

@@ -56,14 +56,14 @@ class CardColorMigrationTest {
     @Test
     fun legacyColorIsRemappedOntoThePalette() {
         helper.createDatabase(dbName, 1).use { db ->
-            // Le bleu indigo de l'ancienne palette — aucune teinte équivalente dans Modernist.
+            // Le bleu indigo de l'ancienne palette Material.
             insertCard(db, 1L, "Carrefour", "#1565C0")
         }
 
-        assertEquals(
-            nearestModernistColor("#1565C0"),
-            colorsAfterMigration()["Carrefour"]
-        )
+        val remapped = colorsAfterMigration()["Carrefour"]
+        assertEquals(nearestModernistColor("#1565C0"), remapped)
+        // La grille couvrant huit teintes, un bleu doit rester un bleu.
+        assertEquals("#0D60A3", remapped)
     }
 
     @Test
