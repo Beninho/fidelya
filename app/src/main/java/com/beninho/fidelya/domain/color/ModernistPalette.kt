@@ -12,38 +12,56 @@ import kotlin.math.pow
  * Le thème « Modernist » est monochrome, mais un fond de carte n'est pas une
  * couleur de thème : c'est de la donnée utilisateur, dont le rôle est de
  * distinguer les cartes d'un coup d'œil. On garde donc la *construction* de
- * Modernist et on l'étend à huit familles de teintes.
+ * Modernist et on l'étend à douze familles de teintes.
  *
  * Construction, en OKLCH :
- *  - Luminosité : l'échelle partagée des rampes Modernist, pas 300/500/700/900
- *    (L = 0.870 / 0.680 / 0.481 / 0.291). Les pas 100 et 200 sont écartés : au
- *    delà de L 0.93 le gamut sRGB ne laisse plus assez de chroma et toutes les
- *    teintes y seraient indistinctement blanches.
+ *  - Luminosité : l'échelle partagée des rampes Modernist, pas
+ *    300/400/500/700/800/900 (L = 0.870 / 0.780 / 0.680 / 0.481 / 0.378 /
+ *    0.291). Les pas 100 et 200 sont écartés : au delà de L 0.93 le gamut sRGB
+ *    ne laisse plus assez de chroma et toutes les teintes y seraient
+ *    indistinctement blanches. Le pas 600 est écarté pour une autre raison : à
+ *    L 0.580 la luminance relative frôle 0.2, le point où les deux encres se
+ *    valent (~3.85:1), et aucune des deux n'y tient AA. Le trou entre les pas
+ *    500 et 700 n'est donc pas un oubli, c'est la zone morte du contraste.
  *  - Teintes : 31.5° — celle de l'accent Modernist — puis 70, 110, 148, 192,
- *    250, 295 et 340°.
- *  - Chroma : constant par pas (0.090 / 0.170 / 0.130 / 0.075), écrêté au
- *    gamut. Modernist pousse sa rampe accent au chroma maximal, mais ce maximum
- *    varie du simple au quadruple selon la teinte : repris tel quel il donne un
- *    arc-en-ciel de néons disparates. À chroma constant les huit familles se
- *    lisent comme un seul jeu — et le pas 300 du rouge retombe exactement sur
- *    le #FFC4B8 de la rampe d'origine, ce qui vérifie la construction.
+ *    221, 250, 272, 295, 318, 340 et 6°. Les quatre dernières sont venues
+ *    subdiviser les quatre plus grands écarts de la grille à huit familles,
+ *    d'où leur concentration du cyan au rose : les teintes chaudes et vertes y
+ *    étaient déjà les plus serrées. Écart minimal 22.5°, maximal 44°.
+ *  - Chroma : constant par pas (0.090 / 0.130 / 0.170 / 0.130 / 0.100 / 0.075),
+ *    écrêté au gamut. Modernist pousse sa rampe accent au chroma maximal, mais
+ *    ce maximum varie du simple au quadruple selon la teinte : repris tel quel
+ *    il donne un arc-en-ciel de néons disparates. À chroma constant les douze
+ *    familles se lisent comme un seul jeu — et les pas 300 et 400 du rouge
+ *    retombent exactement sur les #FFC4B8 et #FF9783 de la rampe d'origine, ce
+ *    qui vérifie la construction.
  *
  * La famille neutre garde en plus le pas 100 (#F8F4F4) : c'est la seule où un
  * quasi-blanc a du sens, et sans lui un fond blanc n'aurait plus d'équivalent.
  *
- * Les 37 pas passent WCAG AA (≥ 4.5:1, pire cas 5.3:1) avec l'encre que leur
+ * Les 37 pas de la grille à huit familles sont reconduits à l'identique : une
+ * carte enregistrée avant l'extension garde un fond que le sélecteur sait
+ * encore désigner.
+ *
+ * Les 79 pas passent WCAG AA (≥ 4.5:1, pire cas 5.3:1) avec l'encre que leur
  * choisit `cardForegroundColor`.
  */
 val CARD_COLOR_ROWS: List<List<String>> = listOf(
-    listOf("#FFC4B8", "#EE6952", "#993B2C", "#4A1A12"), // rouge — teinte de l'accent Modernist
-    listOf("#FBCA93", "#D18501", "#825100", "#3F2500"), // ambre
-    listOf("#D7DA94", "#9F9F00", "#626200", "#2E2E00"), // olive
-    listOf("#ACE5B3", "#39B457", "#14712F", "#083514"), // vert
-    listOf("#89E7E3", "#01AFAB", "#006C6A", "#003332"), // turquoise
-    listOf("#B4D8FF", "#319CFC", "#0D60A3", "#062D4F"), // bleu
-    listOf("#D7CCFF", "#A17FF5", "#644B9E", "#2F224C"), // violet
-    listOf("#FDBDE7", "#DA69B9", "#8C3B74", "#431A37"), // magenta
-    listOf("#F8F4F4", "#D7D3D3", "#9B9797", "#605D5D", "#2D2B2B") // neutres, rampe Modernist telle quelle
+    listOf("#FFC4B8", "#FF9783", "#EE6952", "#993B2C", "#6D291E", "#4A1A12"), // rouge — teinte de l'accent Modernist
+    listOf("#FBCA93", "#ECA751", "#D18501", "#825100", "#5D3900", "#3F2500"), // ambre
+    listOf("#D7DA94", "#BCBE53", "#9F9F00", "#626200", "#454500", "#2E2E00"), // olive
+    listOf("#ACE5B3", "#7ACE87", "#39B457", "#14712F", "#0E5020", "#083514"), // vert
+    listOf("#89E7E3", "#1ED1CC", "#01AFAB", "#006C6A", "#004D4B", "#003332"), // turquoise
+    listOf("#8EE2FE", "#38CAF1", "#00A9CE", "#006981", "#004A5C", "#00313E"), // cyan
+    listOf("#B4D8FF", "#7BBDFF", "#319CFC", "#0D60A3", "#0A4474", "#062D4F"), // bleu
+    listOf("#C5D3FF", "#9EB3FF", "#758EFF", "#4556A6", "#303C76", "#1F2850"), // indigo
+    listOf("#D7CCFF", "#BDA7FF", "#A17FF5", "#644B9E", "#473571", "#2F224C"), // violet
+    listOf("#EDC2FB", "#DA9CED", "#C372DB", "#7B428D", "#572E64", "#3B1E43"), // fuchsia
+    listOf("#FDBDE7", "#EE95D1", "#DA69B9", "#8C3B74", "#632952", "#431A37"), // magenta
+    listOf("#FFC1CD", "#FD92AA", "#EB6488", "#973853", "#6C263A", "#491926"), // rose
+    // Neutres : la rampe Modernist telle quelle, aux mêmes pas que les familles
+    // chromatiques, plus le quasi-blanc du pas 100.
+    listOf("#F8F4F4", "#D7D3D3", "#BAB6B6", "#9B9797", "#605D5D", "#444141", "#2D2B2B")
 )
 
 /**
@@ -134,7 +152,7 @@ private val targetsOklab: List<Triple<Double, Double, Double>> =
 /**
  * Renvoie le pas de la grille le plus proche de [hex], au sens de l'écart perçu.
  *
- * La grille couvrant désormais huit teintes, la teinte d'origine survit au
+ * La grille couvrant désormais douze teintes, la teinte d'origine survit au
  * remappage : un fond bleu tombe sur un bleu, un vert sur un vert. Seules les
  * couleurs très saturées perdent un peu de leur éclat, le chroma de la grille
  * étant volontairement uniforme.

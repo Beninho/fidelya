@@ -36,6 +36,9 @@ import com.beninho.fidelya.ui.theme.cardForegroundColor
 import com.beninho.fidelya.ui.theme.parseCardColor
 
 val PALETTE_ROWS = CardPaletteRows
+
+/** Le nombre de colonnes du sélecteur : la plus longue famille, les neutres. */
+val PALETTE_COLUMNS = PALETTE_ROWS.maxOf { it.size }
 val FORMATS = SupportedBarcodeFormats.names.toList()
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -213,15 +216,25 @@ fun CardEditScreen(
             // Une ligne par famille de teintes, du pas clair au pas soutenu : la grille
             // se lit comme la palette dont elle est tirée. Un FlowRow ne le garantirait
             // pas — sa coupure dépend de la largeur d'écran et scinderait les familles.
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            //
+            // Les pastilles se partagent la largeur au lieu de la mesurer : à taille
+            // fixe, les sept pas de la famille neutre débordaient sur un écran de
+            // 360dp. Les familles chromatiques n'en ont que six et laissent donc une
+            // colonne vide en fin de ligne — c'est ce qui garde les pas alignés d'une
+            // famille à l'autre, la grille se lisant aussi en colonnes.
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 PALETTE_ROWS.forEach { family ->
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
                         family.forEach { hex ->
                             val color = parseCardColor(hex)
                             val selected = state.backgroundColor == hex
                             Box(
                                 Modifier
-                                    .size(44.dp)
+                                    .weight(1f)
+                                    .aspectRatio(1f)
                                     .background(color, RectangleShape)
                                     // Liseré permanent : plusieurs pas tombent sur le fond du
                                     // thème (#2D2B2B est exactement Neutral900 en sombre) et
@@ -236,6 +249,9 @@ fun CardEditScreen(
                                     )
                                     .clickable { vm.onColorChange(hex) }
                             )
+                        }
+                        repeat(PALETTE_COLUMNS - family.size) {
+                            Spacer(Modifier.weight(1f))
                         }
                     }
                 }

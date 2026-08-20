@@ -31,12 +31,12 @@ class ModernistPaletteTest {
 
     @Test
     fun gridHasOneRowPerHueFamily() {
-        assertEquals(9, CARD_COLOR_ROWS.size)
-        // Huit familles chromatiques à quatre pas, plus les neutres qui gardent
+        assertEquals(13, CARD_COLOR_ROWS.size)
+        // Douze familles chromatiques à six pas, plus les neutres qui gardent
         // en plus leur quasi-blanc.
-        assertEquals(List(8) { 4 } + listOf(5), CARD_COLOR_ROWS.map { it.size })
-        assertEquals(37, grid.size)
-        assertEquals(37, grid.toSet().size)
+        assertEquals(List(12) { 6 } + listOf(7), CARD_COLOR_ROWS.map { it.size })
+        assertEquals(79, grid.size)
+        assertEquals(79, grid.toSet().size)
     }
 
     @Test
@@ -56,7 +56,8 @@ class ModernistPaletteTest {
 
     @Test
     fun validSetIsTheGridPlusTheMonochromeLegacy() {
-        assertEquals(53, MODERNIST_CARD_COLORS.size)
+        // 79 pas de grille et 22 pas hérités, dont neuf communs aux deux jeux.
+        assertEquals(92, MODERNIST_CARD_COLORS.size)
         assertEquals(MODERNIST_CARD_COLORS.size, MODERNIST_CARD_COLORS.toSet().size)
         assertTrue(MODERNIST_CARD_COLORS.containsAll(grid))
     }
@@ -109,16 +110,30 @@ class ModernistPaletteTest {
         val expected = mapOf(
             "#1565C0" to "#0D60A3", // bleu   -> bleu
             "#039BE5" to "#319CFC", // cyan   -> bleu
+            "#00838F" to "#006981", // cyan   -> cyan
             "#388E3C" to "#14712F", // vert   -> vert
             "#00897B" to "#006C6A", // teal   -> turquoise
-            "#7B1FA2" to "#644B9E", // violet -> violet
-            "#F06292" to "#DA69B9", // rose   -> magenta
+            "#5C6BC0" to "#4556A6", // indigo -> indigo
+            "#7B1FA2" to "#7B428D", // violet -> fuchsia
+            "#F06292" to "#EB6488", // rose   -> rose
             "#F57C00" to "#D18501", // orange -> ambre
             "#FDD835" to "#D7DA94"  // jaune  -> olive
         )
         expected.forEach { (from, to) ->
             assertEquals("$from mal remappé", to, nearestModernistColor(from))
         }
+    }
+
+    /**
+     * Les pas ajoutés doivent être atteignables : un pas que le remappage
+     * n'atteint jamais n'existe que dans le sélecteur.
+     */
+    @Test
+    fun theNewIntermediateStepsAreReachable() {
+        assertEquals("#FF9783", nearestModernistColor("#FF9783")) // pas 400 du rouge
+        assertEquals("#7ACE87", nearestModernistColor("#7BCE88")) // pas 400 du vert
+        assertEquals("#6C263A", nearestModernistColor("#6D273B")) // pas 800 du rose
+        assertEquals("#444141", nearestModernistColor("#4E342E")) // brun Material -> neutre 800
     }
 
     /** La valeur est préservée : un fond clair reste clair, un fond sombre sombre. */
