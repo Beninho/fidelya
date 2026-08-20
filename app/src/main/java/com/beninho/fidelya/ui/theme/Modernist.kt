@@ -281,21 +281,13 @@ fun ModernistBlockButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Button(
+    ModernistButtonSurface(
+        text = text,
         onClick = onClick,
-        modifier = modifier.fillMaxWidth(),
-        shape = RectangleShape,
-        // `.btn` : padding var(--space-2) calc(var(--space-3) * 1.2)
-        contentPadding = PaddingValues(horizontal = 14.dp, vertical = ModernistSpace.s2),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary
-        )
-    ) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
-            Text(text, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Start)
-        }
-    }
+        background = MaterialTheme.colorScheme.primary,
+        contentColor = MaterialTheme.colorScheme.onPrimary,
+        modifier = modifier.fillMaxWidth()
+    )
 }
 
 /**
@@ -567,6 +559,40 @@ fun ModernistTag(text: String, modifier: Modifier = Modifier) {
     )
 }
 
+/**
+ * Le padding commun aux deux boutons — `.btn-block` et son pendant sobre.
+ *
+ * Ils se posent côte à côte dans les barres basses, donc ils doivent faire
+ * exactement la même hauteur. C'est pour ça qu'ils ne passent pas par le
+ * `Button` de Material : celui-ci impose une hauteur minimale de 40dp, qui ne
+ * correspond ni au padding de la maquette ni à celle du bouton à filet.
+ */
+private val ButtonPadding = PaddingValues(horizontal = 15.dp, vertical = 14.dp)
+
+@Composable
+private fun ModernistButtonSurface(
+    text: String,
+    onClick: () -> Unit,
+    background: Color,
+    contentColor: Color,
+    modifier: Modifier = Modifier,
+    border: Color? = null
+) {
+    Text(
+        text = text,
+        modifier = modifier
+            .background(background)
+            .then(if (border != null) Modifier.border(1.dp, border, RectangleShape) else Modifier)
+            .clickable(onClick = onClick)
+            .padding(ButtonPadding),
+        fontFamily = Archivo,
+        fontWeight = FontWeight.ExtraBold,
+        fontSize = 14.sp,
+        textAlign = TextAlign.Start,
+        color = contentColor
+    )
+}
+
 /** Le pendant sobre de `.btn-block` : `.btn-secondary`, filet et fond transparent. */
 @Composable
 fun ModernistOutlinedButton(
@@ -574,16 +600,13 @@ fun ModernistOutlinedButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Text(
+    ModernistButtonSurface(
         text = text,
+        onClick = onClick,
+        background = Color.Transparent,
+        contentColor = MaterialTheme.colorScheme.onSurface,
+        border = modernistDividerColor(),
         modifier = modifier
-            .border(1.dp, modernistDividerColor(), RectangleShape)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 15.dp, vertical = 14.dp),
-        fontFamily = Archivo,
-        fontWeight = FontWeight.ExtraBold,
-        fontSize = 14.sp,
-        color = MaterialTheme.colorScheme.onSurface
     )
 }
 
