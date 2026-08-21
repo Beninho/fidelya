@@ -38,6 +38,7 @@ import time
 import unicodedata
 import urllib.parse
 import urllib.request
+from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -243,21 +244,36 @@ def site_icon_url(brand: Brand) -> str | None:
     Le service de favicons renvoie parfois un 16 px illisible là où le site
     déclare une `apple-touch-icon` de 180 px ou plus. On lit donc l'en-tête de
     la page d'accueil, et on garde la plus grande icône annoncée.
-    """
-    home = f"https://www.{brand.domain}/" if "." in brand.domain and brand.domain.count(".") == 1 \
-        else f"https://{brand.domain}/"
-    try:
-        html = get(home, timeout=15).decode("utf-8", "replace")
-    except Exception:
-        return None
 
+    Les deux hôtes sont essayés, le domaine nu puis `www.` : certains sites ne
+    répondent que sur l'un des deux, et le déduire du nombre de points faisait
+    retomber l'enseigne sur la favicon sans rien dire.
+    """
+    for home in (f"https://{brand.domain}/", f"https://www.{brand.domain}/"):
+        try:
+            html = get(home, timeout=15).decode("utf-8", "replace")
+        except Exception:
+            continue
+        icon = largest_declared_icon(home, html)
+        if icon:
+            return icon
+    return None
+
+
+def largest_declared_icon(home: str, html: str) -> str | None:
+    """L'icône la plus grande annoncée par les `<link rel=icon>` de la page."""
     best: tuple[int, str] | None = None
     for tag in re.findall(r"<link\b[^>]*>", html[:200_000], re.IGNORECASE):
         if not re.search(r'rel=["\'][^"\']*icon', tag, re.IGNORECASE):
             continue
         href = re.search(r'href=["\']([^"\']+)', tag, re.IGNORECASE)
-        if not href or href.group(1).endswith(".svg"):
-            continue  # Pillow ne lit pas le SVG
+        if not href:
+            continue
+        # Pillow ne lit pas le SVG. Le suffixe se juge sur le chemin seul :
+        # beaucoup de sites versionnent l'URL (`icon.svg?v=3`), et le test
+        # portait alors sur la query.
+        if urllib.parse.urlparse(href.group(1)).path.lower().endswith(".svg"):
+            continue
         sizes = re.search(r'sizes=["\'](\d+)', tag, re.IGNORECASE)
         side = int(sizes.group(1)) if sizes else 0
         if "apple-touch" in tag.lower():
@@ -306,13 +322,25 @@ def normalize(raw: bytes) -> Image.Image:
     return square
 
 
+# Le pas de quantification du comptage, par canal. Assez large pour que les
+# nuances d'un même aplat tombent dans le même seau, assez fin pour ne pas
+# mélanger deux teintes de marque.
+COLOR_STEP = 16
+
+
 def dominant_color(image: Image.Image) -> str:
     """La couleur du logo, pour préremplir le fond de la carte.
 
-    Moyenne des pixels opaques, en écartant les quasi-blancs et quasi-noirs :
-    un logo est souvent une forme colorée sur une plaque blanche, et c'est la
-    forme qui identifie la marque. `nearestModernistColor` ramènera ensuite
-    cette couleur sur un pas de la palette.
+    La couleur la plus fréquente parmi les pixels opaques, en écartant les
+    quasi-blancs et quasi-noirs : un logo est souvent une forme colorée sur une
+    plaque blanche, et c'est la forme qui identifie la marque.
+
+    Le comptage passe par des paliers de `COLOR_STEP` par canal, puis on moyenne
+    les pixels du palier gagnant. Une moyenne sur tous les pixels donnerait le
+    milieu de deux teintes de marque, absent du logo : le bleu et le jaune
+    d'IKEA rendaient un olive, le jaune et le bleu de Lidl aussi.
+    `nearestModernistColor` ramènera ensuite cette couleur sur un pas de la
+    palette.
 
     Les pixels sont lus par `tobytes` plutôt que par `getdata`, déprécié en
     Pillow 12 : l'image est en RGBA, donc quatre octets par pixel dans l'ordre.
@@ -330,9 +358,19 @@ def dominant_color(image: Image.Image) -> str:
     sample = vivid or pixels
     if not sample:
         return "#605D5D"
-    r = sum(p[0] for p in sample) // len(sample)
-    g = sum(p[1] for p in sample) // len(sample)
-    b = sum(p[2] for p in sample) // len(sample)
+
+    def bucket(pixel: bytes) -> tuple[int, int, int]:
+        return (
+            pixel[0] // COLOR_STEP,
+            pixel[1] // COLOR_STEP,
+            pixel[2] // COLOR_STEP,
+        )
+
+    winner = Counter(bucket(p) for p in sample).most_common(1)[0][0]
+    kept = [p for p in sample if bucket(p) == winner]
+    r = sum(p[0] for p in kept) // len(kept)
+    g = sum(p[1] for p in kept) // len(kept)
+    b = sum(p[2] for p in kept) // len(kept)
     return f"#{r:02X}{g:02X}{b:02X}"
 
 
@@ -378,7 +416,6 @@ data class Brand(
     val name: String,
     /** Le nom du programme de fidélité, en second de la suggestion. */
     val program: String,
-    val sector: String,
     @DrawableRes val logo: Int,
     /**
      * La couleur dominante du logo, telle quelle. C'est
@@ -397,9 +434,11 @@ def generate_catalog(rows: list[tuple[Brand, str]]) -> None:
     lines = [KOTLIN_HEADER]
     for brand, color in rows:
         drawable = f"brand_{brand.slug.replace('-', '_')}"
+        # Le secteur ne sert qu'à ranger la table de ce script : rien ne le lit
+        # dans l'application, il ne part donc pas dans l'APK.
         lines.append(
             f'    Brand("{escape(brand.name)}", "{escape(brand.program)}", '
-            f'"{escape(brand.sector)}", R.drawable.{drawable}, "{color}"),\n'
+            f'R.drawable.{drawable}, "{color}"),\n'
         )
     lines.append(")\n")
     CATALOG.parent.mkdir(parents=True, exist_ok=True)
@@ -432,14 +471,20 @@ def main() -> int:
         rows.append((brand, color))
         time.sleep(0.2)  # les API Wikimedia n'aiment pas les rafales
 
+    # Un échec, même isolé, laisse le catalogue en place : le réécrire sans
+    # l'enseigne ratée la sortirait de l'application tout en laissant son
+    # drawable orphelin dans les ressources.
+    if failures:
+        print(
+            f"\nsans logo : {', '.join(failures)} — catalogue inchangé",
+            file=sys.stderr,
+        )
+        return 1
+
     # Le catalogue n'est réécrit qu'en passe complète : une passe partielle
     # n'aurait que les enseignes demandées et perdrait les autres.
     if not only and rows:
         generate_catalog(rows)
-
-    if failures:
-        print(f"\nsans logo : {', '.join(failures)}", file=sys.stderr)
-        return 1
     return 0
 
 

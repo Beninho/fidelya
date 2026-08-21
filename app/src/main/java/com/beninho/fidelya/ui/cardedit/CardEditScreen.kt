@@ -3,7 +3,6 @@ package com.beninho.fidelya.ui.cardedit
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -17,8 +16,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -28,6 +25,7 @@ import com.beninho.fidelya.barcode.SupportedBarcodeFormats
 import com.beninho.fidelya.data.brand.Brand
 import com.beninho.fidelya.data.logo.LogoStore
 import com.beninho.fidelya.data.repository.CardRepository
+import com.beninho.fidelya.ui.components.BrandLogo
 import com.beninho.fidelya.ui.components.CardLogo
 import com.beninho.fidelya.ui.theme.Archivo
 import com.beninho.fidelya.ui.theme.CardPaletteRows
@@ -321,6 +319,9 @@ fun CardEditScreen(
     }
 }
 
+/** Le côté de la vignette d'enseigne dans la liste des suggestions. */
+private val BRAND_SUGGESTION_LOGO = 28.dp
+
 /**
  * Les enseignes proposées sous le champ du nom.
  *
@@ -351,12 +352,7 @@ private fun BrandSuggestions(
                 horizontalArrangement = Arrangement.spacedBy(ModernistSpace.s3),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Image(
-                    painter = painterResource(brand.logo),
-                    contentDescription = null,
-                    contentScale = ContentScale.Fit,
-                    modifier = Modifier.size(28.dp)
-                )
+                BrandLogo(brand.logo, size = BRAND_SUGGESTION_LOGO)
                 Column(Modifier.weight(1f)) {
                     Text(
                         text = brand.name,

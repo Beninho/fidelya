@@ -4,7 +4,7 @@ title: Logos d'enseignes
 
 # Logos d'enseignes
 
-L'application embarque le logo de 61 enseignes françaises. Dans le formulaire
+L'application embarque le logo de 65 enseignes françaises. Dans le formulaire
 d'une carte, la saisie du nom du magasin propose les enseignes qui
 correspondent ; choisir l'une d'elles remplit le nom, attache son logo et pose
 la couleur de la carte. C'est ce que demandait
@@ -20,7 +20,7 @@ l'utilisateur.
 | --- | --- |
 | `scripts/brand_logos.py` | Récupère les logos et **génère** le catalogue Kotlin. |
 | `app/src/main/res/drawable-nodpi/brand_*.webp` | Les logos, en WebP sans perte, carrés, fond transparent. |
-| `app/src/main/java/com/beninho/fidelya/data/brand/BrandCatalog.kt` | **Généré.** Nom, programme, secteur, drawable et couleur de chaque enseigne. |
+| `app/src/main/java/com/beninho/fidelya/data/brand/BrandCatalog.kt` | **Généré.** Nom, programme, drawable et couleur de chaque enseigne. |
 | `app/src/main/java/com/beninho/fidelya/data/brand/BrandSearch.kt` | La recherche derrière les suggestions. Écrit à la main. |
 
 `BrandCatalog.kt` ne s'édite pas à la main : ajouter l'enseigne à la table
@@ -81,7 +81,8 @@ EOF
 ## Ajouter une enseigne
 
 1. Ajouter une ligne à `BRANDS` dans `scripts/brand_logos.py` : slug, nom,
-   programme de fidélité, secteur, domaine du site.
+   programme de fidélité, secteur, domaine du site. Le secteur ne sert qu'à
+   ranger la table : il ne part pas dans le catalogue Kotlin.
 2. `python3 scripts/brand_logos.py <slug>` et regarder le drawable obtenu.
 3. S'il est mauvais ou absent : fixer `qid=` (le Q-id Wikidata de l'enseigne) ou
    `logo_url=` (une URL de logo directe).
@@ -91,7 +92,7 @@ EOF
 
 ## Poids
 
-Les 61 logos pèsent environ 930 Ko dans l'APK. Ils sont en `drawable-nodpi` :
+Les 65 logos pèsent environ 1,0 Mo dans l'APK. Ils sont en `drawable-nodpi` :
 une seule densité, pas de déclinaison mdpi/xxxhdpi qui multiplierait le poids
 pour des vignettes de 64 dp.
 

@@ -7,7 +7,7 @@ Application Android de gestion de cartes de fidélité. Une app sur laquelle on 
 - **Ajout par scan** — utilise la caméra et ML Kit pour détecter automatiquement le code-barres et son format
 - **Saisie manuelle** — entrez le numéro et choisissez le format parmi QR Code, EAN-13, EAN-8, Code 128, Code 39, PDF 417, Data Matrix
 - **Affichage plein écran** — la luminosité monte automatiquement lors de l'affichage pour faciliter la lecture en caisse
-- **Logos d'enseignes** — le logo de 61 enseignes françaises est embarqué : la saisie du nom du magasin les propose, et l'enseigne choisie remplit le nom, le logo et la couleur
+- **Logos d'enseignes** — le logo de 65 enseignes françaises est embarqué : la saisie du nom du magasin les propose, et l'enseigne choisie remplit le nom, le logo et la couleur
 - **Personnalisation** — couleur de fond parmi les 22 pas des rampes du design system, emoji ou initiale en icône
 - **Réorganisation** — maintenez appuyé sur une carte pour la déplacer par glisser-déposer, l'ordre est persistant
 - **Sauvegarde** — exportez et importez toutes vos cartes au format JSON
@@ -206,8 +206,8 @@ suppression d'une carte.
 
 #### Logos d'enseignes embarqués
 
-61 enseignes françaises sont livrées avec leur logo, en WebP sans perte dans
-`res/drawable-nodpi` (~930 Ko). Taper le nom du magasin propose celles qui
+65 enseignes françaises sont livrées avec leur logo, en WebP sans perte dans
+`res/drawable-nodpi` (~1,0 Mo). Taper le nom du magasin propose celles qui
 correspondent ; l'enseigne choisie remplit le nom, attache son logo et pose la
 couleur de la carte — la couleur dominante du logo, ramenée sur un pas de la
 palette par `nearestModernistColor`.

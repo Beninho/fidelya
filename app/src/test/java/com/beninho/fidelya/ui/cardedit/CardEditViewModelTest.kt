@@ -10,6 +10,7 @@ import com.beninho.fidelya.domain.model.LoyaltyCard
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -292,7 +293,7 @@ class CardEditViewModelTest {
 
     @Test
     fun `selecting a brand fills the name, the colour and the bundled logo`() = runTest {
-        val brand = Brand("Carrefour", "Carrefour Pass", "Grande distribution", 42, "#0D60A3")
+        val brand = Brand("Carrefour", "Carrefour Pass", 42, "#0D60A3")
         whenever(logoStore.storeResource(42)).thenReturn("/logos/carrefour.img")
 
         val vm = CardEditViewModel(repository, logoStore, cardId = -1L)
@@ -313,7 +314,7 @@ class CardEditViewModelTest {
     }
 
     @Test
-    fun `selecting a brand replaces the previous logo file`() = runTest {
+    fun `selecting a brand keeps the saved logo file until the card is saved`() = runTest {
         val brand = BRAND_CATALOG.first()
         whenever(logoStore.storeResource(brand.logo)).thenReturn("/logos/new.img")
         whenever(repository.getById(7L)).thenReturn(existing.copy(id = 7L, logoUri = "/logos/old.img"))
@@ -323,12 +324,73 @@ class CardEditViewModelTest {
         vm.onBrandSelected(brand)
         advanceUntilIdle()
 
+        // La carte en base désigne encore « old.img » : un retour arrière sans
+        // enregistrer la laisserait sinon sans logo.
+        verify(logoStore, never()).delete("/logos/old.img")
+        vm.uiState.test {
+            assertEquals("/logos/new.img", awaitItem().logoPath)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `saving after selecting a brand removes the replaced logo file`() = runTest {
+        val brand = BRAND_CATALOG.first()
+        whenever(logoStore.storeResource(brand.logo)).thenReturn("/logos/new.img")
+        whenever(repository.getById(7L)).thenReturn(existing.copy(id = 7L, logoUri = "/logos/old.img"))
+
+        val vm = CardEditViewModel(repository, logoStore, cardId = 7L)
+        advanceUntilIdle()
+        vm.onBrandSelected(brand)
+        advanceUntilIdle()
+        vm.save()
+        advanceUntilIdle()
+
         verify(logoStore).delete("/logos/old.img")
     }
 
     @Test
+    fun `a brand chosen just before saving still reaches the card`() = runTest {
+        val brand = Brand("Carrefour", "Carrefour Pass", 42, "#0D60A3")
+        whenever(logoStore.storeResource(42)).thenReturn("/logos/carrefour.img")
+
+        val vm = CardEditViewModel(repository, logoStore, cardId = -1L)
+        vm.onCardNumberChange("1234567890")
+        vm.onBrandSelected(brand)
+        // Sans attendre la recopie : l'enregistrement doit l'attendre lui-même,
+        // sinon la carte partirait sans logo et le fichier resterait orphelin.
+        vm.save()
+        advanceUntilIdle()
+
+        val saved = argumentCaptor<LoyaltyCard>()
+        verify(repository).save(saved.capture())
+        assertEquals("/logos/carrefour.img", saved.firstValue.logoUri)
+    }
+
+    @Test
+    fun `a brand chosen before the card is loaded survives the load`() = runTest {
+        // Dispatcher à la demande : la lecture en base reste en attente le temps
+        // du choix de l'enseigne, comme à l'ouverture réelle du formulaire.
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val brand = Brand("Casino", "Club Casino", 7, "#14712F")
+        whenever(logoStore.storeResource(7)).thenReturn("/logos/casino.img")
+        whenever(repository.getById(9L)).thenReturn(existing.copy(id = 9L, logoUri = "/logos/old.img"))
+
+        val vm = CardEditViewModel(repository, logoStore, cardId = 9L)
+        vm.onBrandSelected(brand)
+        advanceUntilIdle()
+
+        vm.uiState.test {
+            val state = awaitItem()
+            assertEquals("Casino", state.storeName)
+            assertEquals("/logos/casino.img", state.logoPath)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun `a brand whose logo cannot be copied still fills the name`() = runTest {
-        val brand = Brand("Casino", "Club Casino", "Grande distribution", 7, "#14712F")
+        val brand = Brand("Casino", "Club Casino", 7, "#14712F")
         whenever(logoStore.storeResource(7)).thenReturn(null)
 
         val vm = CardEditViewModel(repository, logoStore, cardId = -1L)
