@@ -9,13 +9,19 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.beninho.fidelya.data.repository.CardRepository
+import com.beninho.fidelya.domain.model.LoyaltyCard
 import com.beninho.fidelya.domain.share.CardShareCodec
 import com.beninho.fidelya.domain.share.toDomain
 import com.beninho.fidelya.ui.theme.*
@@ -32,12 +38,28 @@ import com.beninho.fidelya.ui.theme.*
 @Composable
 fun ReceiveScreen(
     payload: String,
-    onAccept: (com.beninho.fidelya.domain.model.LoyaltyCard) -> Unit,
-    onReject: () -> Unit
+    repository: CardRepository,
+    onAccept: (LoyaltyCard) -> Unit,
+    onReject: () -> Unit,
+    onOpenDuplicate: (Long) -> Unit = {},
+    /** Supprime la carte locale qui fait doublon — la base et le logo avec. */
+    onDeleteDuplicate: (LoyaltyCard) -> Unit = {}
 ) {
     val now = remember { System.currentTimeMillis() }
     val shared = remember(payload) { CardShareCodec.decode(payload) }
     val expired = shared != null && CardShareCodec.isExpired(shared, now)
+
+    // Cet écran est déjà l'étape de confirmation : le doublon ne s'annonce donc
+    // pas à l'ouverture mais à l'instant de l'ajout.
+    var duplicate by remember(payload) { mutableStateOf<LoyaltyCard?>(null) }
+    LaunchedEffect(shared, expired) {
+        duplicate = if (shared != null && !expired) {
+            repository.findDuplicate(shared.toDomain().cardNumber)
+        } else {
+            null
+        }
+    }
+    var duplicateShown by remember(payload) { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -68,7 +90,10 @@ fun ReceiveScreen(
                         Box(Modifier.weight(1f)) {
                             ModernistBlockButton(
                                 text = "Ajouter à mes cartes",
-                                onClick = { onAccept(shared.toDomain()) }
+                                onClick = {
+                                    if (duplicate != null) duplicateShown = true
+                                    else onAccept(shared.toDomain())
+                                }
                             )
                         }
                         ModernistOutlinedButton("Refuser", onReject)
@@ -188,5 +213,38 @@ fun ReceiveScreen(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
+    }
+
+    val dup = duplicate
+    if (duplicateShown && dup != null && shared != null) {
+        ModernistDialog(
+            title = "Carte déjà enregistrée",
+            body = "La carte « ${dup.storeName} » porte déjà le numéro ${dup.cardNumber}. " +
+                "Vous pouvez l'ajouter quand même, ou supprimer celle qui fait doublon.",
+            confirmLabel = "Ajouter quand même",
+            onConfirm = {
+                duplicateShown = false
+                onAccept(shared.toDomain())
+            },
+            dismissLabel = "Annuler",
+            onDismiss = { duplicateShown = false },
+            secondaryActions = listOf(
+                ModernistDialogAction(
+                    label = "Voir la carte existante",
+                    onClick = { onOpenDuplicate(dup.id) }
+                ),
+                ModernistDialogAction(
+                    label = "Supprimer la carte existante",
+                    onClick = {
+                        onDeleteDuplicate(dup)
+                        // L'alerte n'a plus de raison d'être : la carte locale
+                        // vient de partir, l'ajout peut suivre sans avertissement.
+                        duplicate = null
+                        duplicateShown = false
+                    },
+                    destructive = true
+                )
+            )
+        )
     }
 }

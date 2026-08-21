@@ -38,5 +38,8 @@ class CardRepositoryImpl(private val dao: LoyaltyCardDao) : CardRepository {
 
     override suspend fun getAll(): List<LoyaltyCard> = dao.getAll().map { it.toDomain() }
 
+    override suspend fun findDuplicate(cardNumber: String, excludeId: Long): LoyaltyCard? =
+        dao.findByCardNumber(cardNumber, excludeId)?.toDomain()
+
     override suspend fun markUsed(id: Long) = dao.markUsed(id, System.currentTimeMillis())
 }

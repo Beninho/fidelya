@@ -26,6 +26,8 @@ import com.beninho.fidelya.data.repository.CardRepository
 import com.beninho.fidelya.ui.components.CardLogo
 import com.beninho.fidelya.ui.theme.CardPaletteRows
 import com.beninho.fidelya.ui.theme.ModernistBlockButton
+import com.beninho.fidelya.ui.theme.ModernistDialog
+import com.beninho.fidelya.ui.theme.ModernistDialogAction
 import com.beninho.fidelya.ui.theme.ModernistDivider
 import com.beninho.fidelya.ui.theme.ModernistAlpha
 import com.beninho.fidelya.ui.theme.ModernistSectionLabel
@@ -49,6 +51,8 @@ fun CardEditScreen(
     logoStore: LogoStore,
     onSaved: () -> Unit,
     onBack: () -> Unit,
+    onOpenDuplicate: (Long) -> Unit = {},
+    onDeleted: () -> Unit = onSaved,
     prefilledCardNumber: String? = null,
     prefilledFormat: String? = null,
     vm: CardEditViewModel = viewModel(
@@ -68,6 +72,13 @@ fun CardEditScreen(
         if (state.isSaved) {
             vm.onSavedConsumed()
             onSaved()
+        }
+    }
+
+    LaunchedEffect(state.isDeleted) {
+        if (state.isDeleted) {
+            vm.onDeletedConsumed()
+            onDeleted()
         }
     }
 
@@ -257,5 +268,43 @@ fun CardEditScreen(
                 }
             }
         }
+    }
+
+    state.duplicate?.let { dup ->
+        ModernistDialog(
+            title = "Carte déjà enregistrée",
+            body = "La carte « ${dup.storeName} » porte déjà le numéro ${dup.cardNumber}. " +
+                "Vous pouvez l'enregistrer quand même, ou supprimer celle qui fait doublon.",
+            confirmLabel = "Enregistrer quand même",
+            onConfirm = vm::onDuplicateAccepted,
+            dismissLabel = "Annuler",
+            onDismiss = vm::onDuplicateDismissed,
+            secondaryActions = buildList {
+                add(
+                    ModernistDialogAction(
+                        label = "Voir la carte existante",
+                        onClick = { onOpenDuplicate(dup.id) }
+                    )
+                )
+                add(
+                    ModernistDialogAction(
+                        label = "Supprimer l'autre carte",
+                        onClick = vm::onDeleteDuplicate,
+                        destructive = true
+                    )
+                )
+                // En création il n'y a encore rien en base à supprimer : « Annuler »
+                // suffit à jeter la saisie.
+                if (cardId > 0) {
+                    add(
+                        ModernistDialogAction(
+                            label = "Supprimer cette carte",
+                            onClick = vm::onDeleteSelf,
+                            destructive = true
+                        )
+                    )
+                }
+            }
+        )
     }
 }

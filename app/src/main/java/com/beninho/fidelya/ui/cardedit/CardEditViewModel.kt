@@ -30,6 +30,16 @@ class CardEditViewModel(
     val uiState: StateFlow<CardEditUiState> = _uiState
 
     init {
+        // Le formulaire ouvert depuis un scan arrive avec le numéro déjà lu : on
+        // signale le doublon tout de suite plutôt qu'après la saisie du nom.
+        if (!prefilledCardNumber.isNullOrBlank()) {
+            viewModelScope.launch {
+                repository.findDuplicate(prefilledCardNumber.trim(), excludeId())?.let { dup ->
+                    _uiState.update { it.copy(duplicate = dup) }
+                }
+            }
+        }
+
         if (cardId > 0) {
             viewModelScope.launch {
                 repository.getById(cardId)?.let { card ->
@@ -50,8 +60,17 @@ class CardEditViewModel(
 
     fun onStoreNameChange(value: String) =
         _uiState.update { it.copy(storeName = value, storeNameError = null) }
+    // Un numéro retouché invalide l'acceptation précédente : sans ce reset, on
+    // pourrait accepter un doublon puis coller un autre numéro déjà pris.
     fun onCardNumberChange(value: String) =
-        _uiState.update { it.copy(cardNumber = value, cardNumberError = null) }
+        _uiState.update {
+            it.copy(
+                cardNumber = value,
+                cardNumberError = null,
+                duplicate = null,
+                duplicateAccepted = false
+            )
+        }
     fun onFormatChange(value: String) =
         _uiState.update { it.copy(barcodeFormat = value) }
     fun onColorChange(value: String) =
@@ -92,6 +111,16 @@ class CardEditViewModel(
 
         viewModelScope.launch {
             try {
+                if (!s.duplicateAccepted) {
+                    // La recherche est dans la coroutine d'enregistrement, pas avant :
+                    // ça ferme la fenêtre entre le contrôle et l'insert.
+                    val dup = repository.findDuplicate(s.cardNumber.trim(), excludeId())
+                    if (dup != null) {
+                        _uiState.update { it.copy(duplicate = dup, duplicateFromSave = true) }
+                        return@launch
+                    }
+                }
+
                 repository.save(
                     LoyaltyCard(
                         id = if (cardId > 0) cardId else 0,
@@ -110,9 +139,62 @@ class CardEditViewModel(
         }
     }
 
+    /** « Enregistrer quand même » : on ferme l'alerte et on relance l'enregistrement. */
+    fun onDuplicateAccepted() {
+        _uiState.update { it.copy(duplicate = null, duplicateAccepted = true) }
+        save()
+    }
+
+    /** « Annuler » : l'alerte se ferme, le formulaire reste ouvert pour corriger. */
+    fun onDuplicateDismissed() {
+        _uiState.update { it.copy(duplicate = null, duplicateFromSave = false) }
+    }
+
+    /**
+     * « Supprimer l'autre carte » : c'est celle-ci qu'on garde. Si l'alerte venait
+     * d'un enregistrement, il reprend tout seul — le doublon n'existe plus.
+     */
+    fun onDeleteDuplicate() {
+        val state = _uiState.value
+        val dup = state.duplicate ?: return
+        val resumeSave = state.duplicateFromSave
+        _uiState.update { it.copy(duplicate = null, duplicateFromSave = false) }
+        viewModelScope.launch {
+            repository.delete(dup)
+            logoStore.delete(dup.logoUri)
+            if (resumeSave) save()
+        }
+    }
+
+    /**
+     * « Supprimer cette carte » : l'autre fait déjà le travail. Réservé à
+     * l'édition — en création, il n'y a rien en base à supprimer, `Annuler` suffit.
+     */
+    fun onDeleteSelf() {
+        if (cardId <= 0) return
+        _uiState.update { it.copy(duplicate = null, duplicateFromSave = false) }
+        viewModelScope.launch {
+            val card = repository.getById(cardId) ?: return@launch
+            repository.delete(card)
+            // Deux chemins possibles : celui en base, et celui d'un logo choisi
+            // dans le formulaire mais pas encore enregistré.
+            logoStore.delete(card.logoUri)
+            val pending = _uiState.value.logoPath
+            if (pending != card.logoUri) logoStore.delete(pending)
+            _uiState.update { it.copy(isDeleted = true) }
+        }
+    }
+
+    fun onDeletedConsumed() {
+        _uiState.update { it.copy(isDeleted = false) }
+    }
+
     fun onSavedConsumed() {
         _uiState.update { it.copy(isSaved = false) }
     }
+
+    /** En édition, la carte modifiée ne doit pas se signaler comme son propre doublon. */
+    private fun excludeId(): Long = if (cardId > 0) cardId else 0L
 }
 
 fun cardEditViewModelFactory(
