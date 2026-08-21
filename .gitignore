@@ -37,3 +37,6 @@ release/
 # agents/, commands/, skills/) stays versioned.
 .claude/settings.local.json
 .claude/*.local.md
+
+# Cache Python des scripts
+__pycache__/

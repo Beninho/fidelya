@@ -113,4 +113,44 @@ class CardEditScreenTest {
         }
         rule.onNodeWithText("9999999").assertIsDisplayed()
     }
+
+    @Test fun typingAStoreNameSuggestsBundledBrands() {
+        runBlocking { whenever(logoStore.storeResource(any())).thenReturn(null) }
+
+        rule.setContent {
+            FidelyaTheme {
+                CardEditScreen(
+                    cardId = -1, repository = repo, logoStore = logoStore,
+                    onSaved = {}, onBack = {}
+                )
+            }
+        }
+
+        // Premier champ de l'écran : le nom du magasin.
+        rule.onAllNodes(hasSetTextAction())[0].performTextInput("carre")
+        rule.onNodeWithText("Carrefour").assertIsDisplayed()
+        rule.onNodeWithText("Carrefour Pass").assertIsDisplayed()
+
+        rule.onNodeWithText("Carrefour").performClick()
+
+        // L'enseigne choisie remplit le nom, et la liste se referme.
+        rule.onNodeWithText("Carrefour Pass").assertDoesNotExist()
+        rule.onAllNodes(hasSetTextAction())[0].assertTextEquals("Carrefour")
+        // C'est bien le logo embarqué de l'enseigne qu'on est allé chercher.
+        runBlocking { verify(logoStore).storeResource(com.beninho.fidelya.R.drawable.brand_carrefour) }
+    }
+
+    @Test fun anUnknownStoreNameSuggestsNothing() {
+        rule.setContent {
+            FidelyaTheme {
+                CardEditScreen(
+                    cardId = -1, repository = repo, logoStore = logoStore,
+                    onSaved = {}, onBack = {}
+                )
+            }
+        }
+
+        rule.onAllNodes(hasSetTextAction())[0].performTextInput("Boulangerie du coin")
+        rule.onNodeWithText("Carrefour Pass").assertDoesNotExist()
+    }
 }

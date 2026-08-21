@@ -1,8 +1,11 @@
 package com.beninho.fidelya.ui.cardedit
 
 import app.cash.turbine.test
+import com.beninho.fidelya.data.brand.BRAND_CATALOG
+import com.beninho.fidelya.data.brand.Brand
 import com.beninho.fidelya.data.logo.LogoStore
 import com.beninho.fidelya.data.repository.CardRepository
+import com.beninho.fidelya.domain.color.nearestModernistColor
 import com.beninho.fidelya.domain.model.LoyaltyCard
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -271,6 +274,71 @@ class CardEditViewModelTest {
         verify(repository, never()).delete(any())
         vm.uiState.test {
             assertFalse(awaitItem().isDeleted)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `typing a store name suggests matching brands`() = runTest {
+        val vm = CardEditViewModel(repository, logoStore, cardId = -1L)
+        vm.onStoreNameChange("carr")
+
+        vm.uiState.test {
+            val state = awaitItem()
+            assertTrue(state.brandSuggestions.any { it.name == "Carrefour" })
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `selecting a brand fills the name, the colour and the bundled logo`() = runTest {
+        val brand = Brand("Carrefour", "Carrefour Pass", "Grande distribution", 42, "#0D60A3")
+        whenever(logoStore.storeResource(42)).thenReturn("/logos/carrefour.img")
+
+        val vm = CardEditViewModel(repository, logoStore, cardId = -1L)
+        vm.onStoreNameChange("carr")
+        vm.onBrandSelected(brand)
+        advanceUntilIdle()
+
+        vm.uiState.test {
+            val state = awaitItem()
+            assertEquals("Carrefour", state.storeName)
+            assertEquals("/logos/carrefour.img", state.logoPath)
+            // La couleur du logo est ramenée sur un pas de la palette.
+            assertEquals(nearestModernistColor("#0D60A3"), state.backgroundColor)
+            // La liste se referme : l'enseigne est choisie.
+            assertTrue(state.brandSuggestions.isEmpty())
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `selecting a brand replaces the previous logo file`() = runTest {
+        val brand = BRAND_CATALOG.first()
+        whenever(logoStore.storeResource(brand.logo)).thenReturn("/logos/new.img")
+        whenever(repository.getById(7L)).thenReturn(existing.copy(id = 7L, logoUri = "/logos/old.img"))
+
+        val vm = CardEditViewModel(repository, logoStore, cardId = 7L)
+        advanceUntilIdle()
+        vm.onBrandSelected(brand)
+        advanceUntilIdle()
+
+        verify(logoStore).delete("/logos/old.img")
+    }
+
+    @Test
+    fun `a brand whose logo cannot be copied still fills the name`() = runTest {
+        val brand = Brand("Casino", "Club Casino", "Grande distribution", 7, "#14712F")
+        whenever(logoStore.storeResource(7)).thenReturn(null)
+
+        val vm = CardEditViewModel(repository, logoStore, cardId = -1L)
+        vm.onBrandSelected(brand)
+        advanceUntilIdle()
+
+        vm.uiState.test {
+            val state = awaitItem()
+            assertEquals("Casino", state.storeName)
+            assertNull(state.logoPath)
             cancelAndIgnoreRemainingEvents()
         }
     }

@@ -2,6 +2,7 @@ package com.beninho.fidelya.data.logo
 
 import android.content.Context
 import android.net.Uri
+import androidx.annotation.DrawableRes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -19,6 +20,14 @@ import java.util.UUID
 interface LogoStore {
     /** Recopie l'image désignée. Renvoie le chemin local, ou `null` si la lecture échoue. */
     suspend fun store(source: Uri): String?
+
+    /**
+     * Recopie un logo embarqué dans l'application — celui d'une enseigne du
+     * catalogue. Le fichier suit le même chemin qu'une image choisie par
+     * l'utilisateur : partage, sauvegarde et suppression n'ont pas à distinguer
+     * les deux, et un logo remplacé ne laisse rien derrière lui.
+     */
+    suspend fun storeResource(@DrawableRes resId: Int): String?
 
     /** Supprime le fichier local. Sans effet sur un chemin vide ou étranger. */
     fun delete(path: String?)
@@ -60,6 +69,16 @@ class LogoStoreImpl(context: Context) : LogoStore {
         runCatching {
             val target = File(dir, "${UUID.randomUUID()}.img")
             appContext.contentResolver.openInputStream(source)!!.use { input ->
+                target.outputStream().use { output -> input.copyTo(output) }
+            }
+            target.absolutePath
+        }.getOrNull()
+    }
+
+    override suspend fun storeResource(@DrawableRes resId: Int): String? = withContext(Dispatchers.IO) {
+        runCatching {
+            val target = File(dir, "${UUID.randomUUID()}.img")
+            appContext.resources.openRawResource(resId).use { input ->
                 target.outputStream().use { output -> input.copyTo(output) }
             }
             target.absolutePath

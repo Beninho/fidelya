@@ -4,8 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import android.net.Uri
+import com.beninho.fidelya.data.brand.Brand
+import com.beninho.fidelya.data.brand.brandSuggestions
 import com.beninho.fidelya.data.logo.LogoStore
 import com.beninho.fidelya.data.repository.CardRepository
+import com.beninho.fidelya.domain.color.nearestModernistColor
 import com.beninho.fidelya.domain.model.LoyaltyCard
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -58,8 +61,43 @@ class CardEditViewModel(
         }
     }
 
+    /**
+     * La saisie du nom alimente les suggestions d'enseignes : c'est le seul
+     * endroit d'où l'utilisateur peut atteindre un logo embarqué, et il tape ce
+     * nom de toute façon.
+     */
     fun onStoreNameChange(value: String) =
-        _uiState.update { it.copy(storeName = value, storeNameError = null) }
+        _uiState.update {
+            it.copy(
+                storeName = value,
+                storeNameError = null,
+                brandSuggestions = brandSuggestions(value)
+            )
+        }
+
+    /**
+     * Une enseigne choisie dans les suggestions : son nom, son logo embarqué et
+     * sa couleur d'un coup — c'est le formulaire déjà rempli, ce que promet
+     * l'issue #5.
+     *
+     * Le fond reprend la couleur du logo ramenée sur un pas de la palette :
+     * l'écran de détail et la liste peignent la carte avec, et une teinte
+     * arbitraire y sortirait du jeu de couleurs.
+     */
+    fun onBrandSelected(brand: Brand) {
+        _uiState.update {
+            it.copy(
+                storeName = brand.name,
+                storeNameError = null,
+                brandSuggestions = emptyList(),
+                backgroundColor = nearestModernistColor(brand.color)
+            )
+        }
+        viewModelScope.launch {
+            val stored = logoStore.storeResource(brand.logo) ?: return@launch
+            replaceLogo(stored)
+        }
+    }
     // Un numéro retouché invalide l'acceptation précédente : sans ce reset, on
     // pourrait accepter un doublon puis coller un autre numéro déjà pris.
     fun onCardNumberChange(value: String) =
@@ -85,10 +123,15 @@ class CardEditViewModel(
     fun onLogoPicked(source: Uri) {
         viewModelScope.launch {
             val stored = logoStore.store(source) ?: return@launch
-            val previous = _uiState.value.logoPath
-            _uiState.update { it.copy(logoPath = stored) }
-            if (previous != stored) logoStore.delete(previous)
+            replaceLogo(stored)
         }
+    }
+
+    /** Le nouveau logo prend la place de l'ancien, dont le fichier part. */
+    private fun replaceLogo(path: String) {
+        val previous = _uiState.value.logoPath
+        _uiState.update { it.copy(logoPath = path) }
+        if (previous != path) logoStore.delete(previous)
     }
 
     fun onLogoCleared() {

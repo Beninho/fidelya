@@ -7,6 +7,7 @@ Application Android de gestion de cartes de fidélité. Une app sur laquelle on 
 - **Ajout par scan** — utilise la caméra et ML Kit pour détecter automatiquement le code-barres et son format
 - **Saisie manuelle** — entrez le numéro et choisissez le format parmi QR Code, EAN-13, EAN-8, Code 128, Code 39, PDF 417, Data Matrix
 - **Affichage plein écran** — la luminosité monte automatiquement lors de l'affichage pour faciliter la lecture en caisse
+- **Logos d'enseignes** — le logo de 61 enseignes françaises est embarqué : la saisie du nom du magasin les propose, et l'enseigne choisie remplit le nom, le logo et la couleur
 - **Personnalisation** — couleur de fond parmi les 22 pas des rampes du design system, emoji ou initiale en icône
 - **Réorganisation** — maintenez appuyé sur une carte pour la déplacer par glisser-déposer, l'ordre est persistant
 - **Sauvegarde** — exportez et importez toutes vos cartes au format JSON
@@ -202,6 +203,25 @@ l'initiale de l'enseigne.
 
 Les fichiers orphelins sont supprimés au remplacement d'un logo comme à la
 suppression d'une carte.
+
+#### Logos d'enseignes embarqués
+
+61 enseignes françaises sont livrées avec leur logo, en WebP sans perte dans
+`res/drawable-nodpi` (~930 Ko). Taper le nom du magasin propose celles qui
+correspondent ; l'enseigne choisie remplit le nom, attache son logo et pose la
+couleur de la carte — la couleur dominante du logo, ramenée sur un pas de la
+palette par `nearestModernistColor`.
+
+Le logo embarqué passe par `LogoStore.storeResource()`, donc par le même chemin
+qu'une image choisie par l'utilisateur : partage, sauvegarde et suppression n'ont
+pas à distinguer les deux.
+
+`data/brand/BrandCatalog.kt` est **généré** par `scripts/brand_logos.py`, qui
+récupère aussi les logos — Wikidata, puis l'icône du site, puis la favicon. La
+recherche derrière les suggestions est dans `BrandSearch.kt` : nom en préfixe,
+puis nom en sous-chaîne, puis mot du programme de fidélité (« Flying Blue »
+trouve Air France). Le mode d'emploi, l'ajout d'une enseigne et la note sur les
+marques sont dans [`docs/brand-logos.md`](docs/brand-logos.md).
 
 ## Design system
 
