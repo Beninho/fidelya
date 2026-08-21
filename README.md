@@ -417,3 +417,19 @@ scripts/export-room-schemas.sh    # une fois, puis committer app/schemas/
 ```
 
 Le script ne réécrit jamais un schéma déjà présent.
+
+## Visuels du Play Store
+
+`screenshots/` porte les huit captures de la fiche — six en thème clair, deux en
+thème « Encre » — et l'image de présentation en 1024×500, produite par
+`feature_graphic_gen.py`.
+
+Les captures viennent de l'app qui tourne : `ScreenshotSeeder`
+(`app/src/androidTest/.../screenshots/`) peuple la base, l'émulateur est forcé en
+1080×1920 pour respecter le ratio maximal de 2:1 imposé par Play Store, et la
+status bar passe en mode démo pour figer l'heure. Le mode d'emploi complet, y
+compris l'upload dans Play Console, est dans
+[`docs/playstore-visuals.md`](docs/playstore-visuals.md).
+
+Ces visuels sont à reprendre à chaque évolution du design system : une fiche
+montre l'app d'avant tant que personne ne rappuie sur le déclencheur.
