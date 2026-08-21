@@ -97,11 +97,19 @@ spinner de chargement.
 | `02_card_detail.png` | taper une carte |
 | `03_checkout_mode.png` | détail → « Présenter en caisse » |
 | `04_scan.png` | « Ajouter une carte » (voir plus bas) |
-| `05_card_edit.png` | « Saisir », formulaire rempli |
+| `05_card_edit.png` | « Saisir », formulaire rempli par la suggestion d'enseigne |
 | `06_reorder.png` | « Ordre » |
 
 Au premier passage en mode caisse, Android superpose son bulletin « Viewing full
 screen » : taper « Got it », puis reprendre la capture. Il ne revient pas.
+
+### Le formulaire de `05_card_edit.png`
+
+Taper les premières lettres d'une enseigne du catalogue — « Inter » — fait
+descendre les suggestions ; en choisir une remplit le nom, le logo et la
+couleur de fond. La capture est prise après la sélection, clavier refermé
+(`KEYCODE_BACK`), format passé sur `EAN_13` pour rester cohérent avec le numéro
+saisi : c'est la vitrine des 65 logos embarqués.
 
 ### Thème « Encre »
 
