@@ -7,12 +7,12 @@ import org.junit.Test
 class BrandSearchTest {
 
     private val catalog = listOf(
-        Brand("Carrefour", "Carrefour Pass", "Grande distribution", 1, "#0D60A3"),
-        Brand("Casino", "Club Casino", "Grande distribution", 2, "#14712F"),
-        Brand("Decathlon", "Carte Decathlon", "Mode", 3, "#0A4474"),
-        Brand("Nocibé", "Carte Nocibé", "Beauté", 4, "#DA69B9"),
-        Brand("H&M", "H&M Club", "Mode", 5, "#EE6952"),
-        Brand("Air France", "Flying Blue", "Divers", 6, "#062D4F")
+        Brand("Carrefour", "Carrefour Pass", 1, "#0D60A3"),
+        Brand("Casino", "Club Casino", 2, "#14712F"),
+        Brand("Decathlon", "Carte Decathlon", 3, "#0A4474"),
+        Brand("Nocibé", "Carte Nocibé", 4, "#DA69B9"),
+        Brand("H&M", "H&M Club", 5, "#EE6952"),
+        Brand("Air France", "Flying Blue", 6, "#062D4F")
     )
 
     @Test
