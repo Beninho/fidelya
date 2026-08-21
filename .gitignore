@@ -28,7 +28,12 @@ release/
 # Secrets
 *.jks
 *.keystore
+# Motif volontairement large : local.properties contient les mots de passe du
+# keystore. Les fichiers de configuration Gradle partagés sont réintégrés juste
+# en dessous — sans eux, le build n'est pas reproductible hors de ce poste.
 *.properties
+!gradle.properties
+!gradle/wrapper/gradle-wrapper.properties
 
 # GrepAI
 .grepai/
