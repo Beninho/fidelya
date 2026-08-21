@@ -60,6 +60,7 @@ fun SettingsScreen(
     brightnessBoost: Boolean,
     onThemeChange: (ThemeChoice) -> Unit,
     onBrightnessBoostChange: (Boolean) -> Unit,
+    onAbout: () -> Unit,
     onBack: () -> Unit,
     vm: CardListViewModel = viewModel(
         factory = cardListViewModelFactory(repository, cardOrderStore, logoStore)
@@ -151,6 +152,11 @@ fun SettingsScreen(
                 title = "Importer un fichier",
                 subtitle = "Fusionne avec les cartes existantes",
                 onClick = { importLauncher.launch(arrayOf("application/json")) }
+            )
+            ModernistListRow(
+                title = "À propos",
+                subtitle = "Confidentialité, soutien au projet, mentions",
+                onClick = onAbout
             )
             Text(
                 text = "Aucun compte, aucune donnée envoyée sur un serveur. " +

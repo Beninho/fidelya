@@ -11,6 +11,7 @@ Application Android de gestion de cartes de fidélité. Une app sur laquelle on 
 - **Personnalisation** — couleur de fond parmi les 22 pas des rampes du design system, emoji ou initiale en icône
 - **Réorganisation** — maintenez appuyé sur une carte pour la déplacer par glisser-déposer, l'ordre est persistant
 - **Sauvegarde** — exportez et importez toutes vos cartes au format JSON
+- **À propos** — écran de présentation : ce que l'app fait de vos données, le lien de soutien [Ko-fi](https://ko-fi.com/benlet), le dépôt, la licence de la police
 
 ## Stack technique
 
@@ -372,9 +373,11 @@ Archivo est distribuée sous **SIL Open Font License 1.1**, dont les termes
 imposent de livrer la licence avec la police. Le texte intégral vit dans
 `app/src/main/res/raw/archivo_ofl.txt` et est embarqué dans l'APK.
 
-Aucun code ne référence cette ressource, donc `isShrinkResources` la retirait
-des builds release : `app/src/main/res/raw/keep.xml` la marque à conserver. Pour
-vérifier après un changement de configuration release :
+Aucun code ne la référençait jusqu'à l'écran « À propos », donc
+`isShrinkResources` la retirait des builds release :
+`app/src/main/res/raw/keep.xml` la marque à conserver. Le garde-fou reste utile
+si l'écran disparaît un jour. Pour vérifier après un changement de configuration
+release :
 
 ```bash
 ./gradlew :app:assembleRelease
@@ -385,9 +388,10 @@ unzip -l app/build/outputs/apk/release/app-release.apk | grep 'res/.*\.txt'
 - Police : [Archivo](https://fonts.google.com/specimen/Archivo) — Omnibus-Type
 - Licence : [SIL OFL 1.1](https://openfontlicense.org/)
 
-L'OFL n'exige pas d'écran de mentions légales dans l'app ; si un écran « À
-propos » est ajouté un jour, y afficher le contenu de `archivo_ofl.txt` est la
-façon la plus simple de rendre la licence visible aux utilisateurs.
+L'OFL n'exige pas d'écran de mentions légales dans l'app, mais l'écran « À
+propos » (Réglages › À propos) rend la licence visible : la ligne « Police
+Archivo » déplie le contenu de `archivo_ofl.txt`, lu depuis la ressource brute.
+C'est le seul code qui référence `R.raw.archivo_ofl`.
 
 ### Migrations de base
 

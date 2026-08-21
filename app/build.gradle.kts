@@ -52,6 +52,9 @@ android {
 
     buildFeatures {
         compose = true
+        // `BuildConfig.VERSION_NAME` alimente l'écran « À propos » ; AGP ne génère
+        // plus la classe par défaut.
+        buildConfig = true
     }
 
     // Les schémas Room exportés servent de fixtures à MigrationTestHelper : ils
