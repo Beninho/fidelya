@@ -23,6 +23,7 @@ import com.beninho.fidelya.data.settings.AppSettings
 import com.beninho.fidelya.data.settings.ThemeChoice
 import com.beninho.fidelya.domain.model.LoyaltyCard
 import com.beninho.fidelya.domain.share.CardShareCodec
+import com.beninho.fidelya.ui.about.AboutScreen
 import com.beninho.fidelya.ui.cardedit.CardEditScreen
 import com.beninho.fidelya.ui.carddetail.CardDetailScreen
 import com.beninho.fidelya.ui.cardlist.CardListScreen
@@ -173,8 +174,12 @@ fun FidelyaNavHost(settings: AppSettings, startDestination: String) {
                 onBrightnessBoostChange = { enabled ->
                     scope.launch { app.settingsStore.saveBrightnessBoost(enabled) }
                 },
+                onAbout = { navController.navigate("about") },
                 onBack = { navController.popBackStack() }
             )
+        }
+        composable("about") {
+            AboutScreen(onBack = { navController.popBackStack() })
         }
         composable(
             "share/{id}",
