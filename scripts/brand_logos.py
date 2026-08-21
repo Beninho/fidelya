@@ -84,6 +84,8 @@ BRANDS: list[Brand] = [
     Brand("franprix", "Franprix", "Carte Franprix", "Grande distribution", "franprix.fr"),
     Brand("lidl", "Lidl", "Lidl Plus", "Grande distribution", "lidl.fr"),
     Brand("aldi", "Aldi", "Offres via l'appli", "Grande distribution", "aldi.fr"),
+    Brand("u", "Magasins U", "Carte U", "Grande distribution", "magasins-u.com"),
+    Brand("chlorophylle", "Chlorophylle Coop", "Carte chlorophylle", "Magasin Bio", "chlorophylle-coop.com"),
     # Mode & habillement
     Brand("kiabi", "Kiabi", "Carte Kiabi", "Mode", "kiabi.com"),
     Brand("uniqlo", "Uniqlo", "Carte Uniqlo", "Mode", "uniqlo.com"),
@@ -93,7 +95,6 @@ BRANDS: list[Brand] = [
     Brand("etam", "Etam", "Carte Etam", "Mode", "etam.com"),
     Brand("promod", "Promod", "Carte Promod", "Mode", "promod.fr"),
     Brand("citadium", "Citadium", "Carte Citadium", "Mode", "citadium.com"),
-    Brand("decathlon", "Decathlon", "Carte Decathlon", "Mode", "decathlon.fr"),
     # Beauté & parfumerie
     Brand("sephora", "Sephora", "Carte Sephora", "Beauté", "sephora.fr"),
     Brand("marionnaud", "Marionnaud", "Carte Marionnaud", "Beauté", "marionnaud.fr"),
@@ -109,6 +110,8 @@ BRANDS: list[Brand] = [
     Brand("darty", "Darty", "Carte Darty", "Culture & loisirs", "darty.com"),
     Brand("boulanger", "Boulanger", "Carte Boulanger", "Culture & loisirs", "boulanger.com"),
     Brand("go-sport", "Go Sport", "Carte Go Sport", "Culture & loisirs", "go-sport.com"),
+    Brand("decathlon", "Decathlon", "Carte Decathlon", "Culture & loisirs", "decathlon.fr"),
+    Brand("intersport", "Intersport", "Team INTERSPORT", "Culture & loisirs", "intersport.fr"),
     # Maison & décoration
     Brand("ikea", "IKEA", "IKEA Family", "Maison", "ikea.com"),
     Brand("conforama", "Conforama", "Carte Conforama", "Maison", "conforama.fr"),
@@ -122,6 +125,7 @@ BRANDS: list[Brand] = [
     Brand("leroy-merlin", "Leroy Merlin", "Carte Leroy Merlin", "Maison", "leroymerlin.fr"),
     Brand("castorama", "Castorama", "Carte Castorama", "Maison", "castorama.fr"),
     Brand("truffaut", "Truffaut", "Carte Truffaut", "Maison", "truffaut.com"),
+    Brand("jardiland", "Jardiland", "Carte jardiland", "Maison", "jardiland.com"),
     # Restauration & alimentation spécialisée
     Brand("starbucks", "Starbucks", "Starbucks Rewards", "Restauration", "starbucks.fr"),
     Brand("mcdonalds", "McDonald's", "McDonald's App", "Restauration", "mcdonalds.fr"),
@@ -309,8 +313,15 @@ def dominant_color(image: Image.Image) -> str:
     un logo est souvent une forme colorée sur une plaque blanche, et c'est la
     forme qui identifie la marque. `nearestModernistColor` ramènera ensuite
     cette couleur sur un pas de la palette.
+
+    Les pixels sont lus par `tobytes` plutôt que par `getdata`, déprécié en
+    Pillow 12 : l'image est en RGBA, donc quatre octets par pixel dans l'ordre.
     """
-    pixels = [p for p in image.getdata() if p[3] > 200]
+    raw = image.tobytes()
+    pixels = [
+        raw[i:i + 4] for i in range(0, len(raw), 4)
+        if raw[i + 3] > 200
+    ]
     vivid = [
         p for p in pixels
         if not (p[0] > 235 and p[1] > 235 and p[2] > 235)
