@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -42,7 +43,7 @@ private const val KOFI_URL = "https://ko-fi.com/benlet"
 /** Le dépôt public — la contrepartie vérifiable des promesses de cet écran. */
 private const val SOURCE_URL = "https://github.com/Beninho/fidelya"
 
-/** Le texte de la licence Archivo, que l'OFL 1.1 impose de livrer avec la police. */
+/** La licence en ligne, en complément du texte embarqué dans `R.raw.archivo_ofl`. */
 private const val OFL_URL = "https://openfontlicense.org/"
 
 /**
@@ -52,16 +53,29 @@ private const val OFL_URL = "https://openfontlicense.org/"
  * — en-tête, `ModernistSectionLabel` pour les sections, `ModernistListRow` pour
  * les lignes cliquables — sans inventer de composant.
  *
- * Les affirmations de la section « Confidentialité » sont volontairement
- * littérales : l'app n'ouvre aucune connexion réseau, mais `allowBackup` est à
- * `true` dans le manifeste, donc la sauvegarde Android peut recopier la base
- * dans le Google Drive de l'utilisateur. Le texte le dit plutôt que de promettre
- * que rien ne quitte l'appareil.
+ * Les affirmations de la section « Confidentialité » se veulent vérifiables sur
+ * l'APK livré, puisque l'écran d'à côté invite à lire le code source. Le
+ * manifeste fusionné n'est pas celui de `app/src/main/AndroidManifest.xml` :
+ *
+ *  - ML Kit y ajoute `INTERNET`, `ACCESS_NETWORK_STATE` et le transport de
+ *    télémétrie de Google (`datatransport` / Clearcut). Le modèle de lecture est
+ *    embarqué, donc la reconnaissance se fait hors ligne, mais la bibliothèque
+ *    garde la faculté d'envoyer des statistiques d'usage à Google, et elle
+ *    n'expose pas d'interrupteur pour l'en empêcher. « Aucun serveur » ne peut
+ *    donc porter que sur Fidelya lui-même.
+ *  - `CAMERA` est la seule permission *demandée* à l'utilisateur ; les autres
+ *    sont normales ou de signature et n'apparaissent jamais dans une invite.
+ *  - `allowBackup` vaut `true`, donc la sauvegarde Android peut recopier la base
+ *    dans le Google Drive de l'utilisateur.
+ *
+ * Chacun de ces trois points est dit à voix haute plutôt que gommé.
  */
 @Composable
 fun AboutScreen(onBack: () -> Unit) {
     val context = LocalContext.current
-    var licenseShown by remember { mutableStateOf(false) }
+    // `rememberSaveable`, pas `remember` : le scroll est déjà sauvegardé, donc une
+    // rotation qui replierait la licence laisserait l'utilisateur dans le vide.
+    var licenseShown by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -117,9 +131,16 @@ fun AboutScreen(onBack: () -> Unit) {
                 subtitle = "Rien à créer, rien à connecter. L'app s'ouvre et fonctionne."
             )
             ModernistListRow(
-                title = "Aucun serveur",
-                subtitle = "Fidelya n'ouvre aucune connexion réseau : ni analytics, " +
-                    "ni publicité, ni synchronisation."
+                title = "Aucun serveur Fidelya",
+                subtitle = "Vos cartes ne sont envoyées nulle part : pas de compte, " +
+                    "pas de synchronisation, pas de publicité, pas de suivi."
+            )
+            ModernistListRow(
+                title = "Lecture des codes hors ligne",
+                subtitle = "Le scan utilise ML Kit, la bibliothèque de Google " +
+                    "embarquée dans l'app : le décodage se fait sur l'appareil, " +
+                    "sans envoyer l'image. ML Kit peut en revanche remonter à " +
+                    "Google ses propres statistiques d'usage."
             )
             ModernistListRow(
                 title = "Stockage privé à l'application",
@@ -127,9 +148,10 @@ fun AboutScreen(onBack: () -> Unit) {
                     "que les autres applications ne peuvent pas lire."
             )
             ModernistListRow(
-                title = "Une seule permission",
+                title = "Une seule permission demandée",
                 subtitle = "La caméra, et seulement pendant le scan d'un code-barres. " +
-                    "Aucune photo n'est enregistrée."
+                    "Aucune photo n'est enregistrée. Les autres permissions de " +
+                    "l'APK sont techniques et ne donnent accès à rien de personnel."
             )
             ModernistListRow(
                 title = "Sauvegarde sous votre contrôle",

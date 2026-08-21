@@ -158,9 +158,12 @@ fun SettingsScreen(
                 subtitle = "Confidentialité, soutien au projet, mentions",
                 onClick = onAbout
             )
+            // Formulation alignée sur l'écran « À propos », qui détaille les nuances :
+            // ce sont les *cartes* qui ne bougent pas, ML Kit ayant sa propre
+            // télémétrie que l'app ne contrôle pas.
             Text(
-                text = "Aucun compte, aucune donnée envoyée sur un serveur. " +
-                    "Tout reste sur le téléphone.",
+                text = "Aucun compte, aucun serveur Fidelya : vos cartes ne " +
+                    "quittent pas le téléphone.",
                 modifier = Modifier.padding(18.dp),
                 fontSize = 12.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
