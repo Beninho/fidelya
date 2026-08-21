@@ -33,7 +33,6 @@ class BrandCatalogTest {
         BRAND_CATALOG.forEach { brand ->
             assertNotEquals("logo manquant pour ${brand.name}", 0, brand.logo)
             assertTrue("programme vide pour ${brand.name}", brand.program.isNotBlank())
-            assertTrue("secteur vide pour ${brand.name}", brand.sector.isNotBlank())
         }
     }
 

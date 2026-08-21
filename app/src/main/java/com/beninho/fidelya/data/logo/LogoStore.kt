@@ -6,6 +6,7 @@ import androidx.annotation.DrawableRes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.InputStream
 import java.util.UUID
 
 /**
@@ -66,23 +67,31 @@ class LogoStoreImpl(context: Context) : LogoStore {
         get() = Logos.dir(appContext).apply { mkdirs() }
 
     override suspend fun store(source: Uri): String? = withContext(Dispatchers.IO) {
-        runCatching {
-            val target = File(dir, "${UUID.randomUUID()}.img")
-            appContext.contentResolver.openInputStream(source)!!.use { input ->
-                target.outputStream().use { output -> input.copyTo(output) }
-            }
-            target.absolutePath
-        }.getOrNull()
+        copyToStorage { appContext.contentResolver.openInputStream(source)!! }
     }
 
     override suspend fun storeResource(@DrawableRes resId: Int): String? = withContext(Dispatchers.IO) {
-        runCatching {
-            val target = File(dir, "${UUID.randomUUID()}.img")
-            appContext.resources.openRawResource(resId).use { input ->
+        copyToStorage { appContext.resources.openRawResource(resId) }
+    }
+
+    /**
+     * Recopie un flux dans un fichier neuf du dossier des logos.
+     *
+     * Le fichier existe dès l'ouverture du flux de sortie : une copie
+     * interrompue — disque plein — laisserait donc un fichier tronqué que rien
+     * ne désigne, l'appelant ne recevant qu'un `null`. Il part avec l'échec.
+     */
+    private fun copyToStorage(open: () -> InputStream): String? {
+        val target = File(dir, "${UUID.randomUUID()}.img")
+        return runCatching {
+            open().use { input ->
                 target.outputStream().use { output -> input.copyTo(output) }
             }
             target.absolutePath
-        }.getOrNull()
+        }.getOrElse {
+            target.delete()
+            null
+        }
     }
 
     override fun delete(path: String?) {
