@@ -3,6 +3,7 @@ package com.beninho.fidelya.ui.cardedit
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -16,14 +17,19 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.beninho.fidelya.barcode.SupportedBarcodeFormats
+import com.beninho.fidelya.data.brand.Brand
 import com.beninho.fidelya.data.logo.LogoStore
 import com.beninho.fidelya.data.repository.CardRepository
 import com.beninho.fidelya.ui.components.CardLogo
+import com.beninho.fidelya.ui.theme.Archivo
 import com.beninho.fidelya.ui.theme.CardPaletteRows
 import com.beninho.fidelya.ui.theme.ModernistBlockButton
 import com.beninho.fidelya.ui.theme.ModernistDialog
@@ -127,6 +133,12 @@ fun CardEditScreen(
                 error = state.storeNameError,
                 modifier = Modifier.fillMaxWidth()
             )
+            if (state.brandSuggestions.isNotEmpty()) {
+                BrandSuggestions(
+                    brands = state.brandSuggestions,
+                    onSelect = vm::onBrandSelected
+                )
+            }
             ModernistTextField(
                 value = state.cardNumber,
                 onValueChange = vm::onCardNumberChange,
@@ -306,5 +318,60 @@ fun CardEditScreen(
                 }
             }
         )
+    }
+}
+
+/**
+ * Les enseignes proposées sous le champ du nom.
+ *
+ * Posée dans le flux du formulaire plutôt que dans un menu flottant : la liste
+ * pousse la suite vers le bas, ce qui la rend impossible à manquer, et un menu
+ * ancré se serait refermé au premier caractère tapé. Le logo est affiché à
+ * gauche, parce que c'est lui qu'on vient chercher.
+ */
+@Composable
+private fun BrandSuggestions(
+    brands: List<Brand>,
+    onSelect: (Brand) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RectangleShape)
+    ) {
+        brands.forEachIndexed { index, brand ->
+            if (index > 0) ModernistDivider(Modifier.padding(horizontal = ModernistSpace.s3))
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .clickable { onSelect(brand) }
+                    .padding(ModernistSpace.s3),
+                horizontalArrangement = Arrangement.spacedBy(ModernistSpace.s3),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Image(
+                    painter = painterResource(brand.logo),
+                    contentDescription = null,
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.size(28.dp)
+                )
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        text = brand.name,
+                        fontFamily = Archivo,
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 14.sp
+                    )
+                    Text(
+                        text = brand.program,
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurface
+                            .copy(alpha = ModernistAlpha.Muted)
+                    )
+                }
+            }
+        }
     }
 }
